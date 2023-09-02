@@ -1,11 +1,11 @@
 {
     "name": "Passport Reload changes Short dt",
     "description": "Keeps on reloading the pages",
-    "version": "1.0",
+    "version": "1.1",
     "manifest_version": 2,
 
     "permissions": [
-        "tabs", "unlimitedStorage", "notifications", "cookies", "history", "browsingData", "activeTab", "storage", "webRequest", "webRequestBlocking", "http://*/*", "https://*/*","https://portal1.passportindia.gov.in/*"
+        "tabs", "unlimitedStorage", "notifications", "cookies", "history", "browsingData", "activeTab", "storage", "webRequest", "webRequestBlocking", "http://*/*", "https://*/*", "https://portal1.passportindia.gov.in/*"
     ],
     "background": {
         "scripts": [           
@@ -18,7 +18,7 @@
         "persistent": true
     },
 
-    "browser_action":{
+    "browser_action": {
         "default_popup": "popup.html",
         "default_icon": {
             "16": "images/16.png",
@@ -30,7 +30,7 @@
     },
 
     "content_scripts": [ 
-         {
+        {
             "run_at": "document_end",
             "all_frames": false,
             "matches": ["*://portal1.passportindia.gov.in/*", "https://www.passportindia.gov.in/*", "https://passportindia.gov.in/*"],
@@ -45,13 +45,13 @@
                 "myscript.js"
             ]
         },
-      {
+        {
             "run_at": "document_start",
             "all_frames": false,
-         
-          "matches": ["*://portal1.passportindia.gov.in/*", "https://www.passportindia.gov.in/*", "https://passportindia.gov.in/*"],
-            "js": [ "js/jquery-3.6.0.min.js", "js/jquery-ui.min.js" ,"js/injected_common.js","injected/remove-alert.js"]
+
+            "matches": ["*://portal1.passportindia.gov.in/*", "https://www.passportindia.gov.in/*", "https://passportindia.gov.in/*"],
+            "js": ["js/jquery-3.6.0.min.js", "js/jquery-ui.min.js", "js/injected_common.js", "injected/remove-alert.js"]
         }
     ],
-    "web_accessible_resources": ["popup.html", "icons/up.png", "icons/down.png","images/start.jpeg","images/stop.jpg"]
+    "web_accessible_resources": ["popup.html", "icons/up.png", "icons/down.png", "images/start.jpeg", "images/stop.jpg"]
 }

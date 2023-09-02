@@ -484,25 +484,22 @@ function ff_main()
         var obj = ff_get_all_location_dates();
 
         var timing = sessionStorage.getItem('reloadtiming');
-        if (timing == null)
+        if (timing != null)
         {
-            console.log("Not sending as timing not set");
-            return;
+            console.log("Time difference=" + (new Date() - sessionStorage.getItem('reloadtiming')));
+
+            var data = {
+                l: '7702020220',
+                obj: obj,
+                op: 'sndpskdata',
+                time: sessionStorage.getItem('reloadtiming')
+            };
+            console.log(data);
+
+            obj != null && gg_port.postMessage(data);
+            console.log(obj);
+            //color changes in psk table  
         }
-
-        console.log("Time difference=" + (new Date() - sessionStorage.getItem('reloadtiming')));
-
-        var data = {
-            l: '7702020220',
-            obj: obj,
-            op: 'sndpskdata',
-            time: sessionStorage.getItem('reloadtiming')
-        };
-        console.log(data);
-
-        obj != null && gg_port.postMessage(data);
-        console.log(obj);
-        //color changes in psk table
 
         ff_handle_start_stop();
 
