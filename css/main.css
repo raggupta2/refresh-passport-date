@@ -1,0 +1,93 @@
+
+
+marquee{
+    display:none;
+}
+
+.twoyears-popup3{
+    display:none;
+}
+
+#main1-content{
+    display:none;
+}
+
+#userName{
+    font-size:2em;
+}
+
+#captcha{
+    width:360px;
+}
+
+#test123{
+    font-size:3em;
+}
+
+#LoginButton{
+    font-size:2em;
+}
+
+#scheduleEnquiry{
+    font-size:2em;
+    padding:1em 1em;
+
+}
+
+.customerrow{
+    border:1px solid red;
+    font-size:1.5em;
+}
+
+#anstatus
+{
+    position:fixed;
+    top: 8px;
+    left:200px;
+    color:green;
+    background-color:lightyellow;
+}
+
+#andad1{
+    position:absolute;
+    bottom:5px;
+    left:5px;
+}
+
+#apptDateId{
+
+    font-size:2em;
+}
+
+#confirmAppointOnline_appointment_book_key{
+    font-size:4em;
+    height:4em;
+}
+
+#ansprow{
+    font-size:2em;
+}
+
+
+#test123{
+    min-width:300px;
+}
+
+#outer > table > tbody > tr:nth-child(2){
+    display:none;
+}
+
+#andatte{
+    position:fixed;
+    bottom:100px;
+    right:10px;
+    font-size:4em;
+    color:red;
+    background-color:lightyellow;
+}
+
+#imgstart,#imgstop{
+    
+    width:120px;
+    height:120px;
+}

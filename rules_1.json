@@ -1,0 +1,9 @@
+[{
+  "id" : 1,
+  "priority": 1,
+  "action" : { "type" : "allow" },
+  "condition" : {
+    "urlFilter" : "https://passportindia.gov.in/*",  
+    "resourceTypes" : ["main_frame"]
+  }
+}]
