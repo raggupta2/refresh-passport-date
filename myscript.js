@@ -26,7 +26,7 @@ var gg_autocb = false; //is it on or off
 
 var gg_socket_listeners = [];
 
-var gg_email = null;
+var gg_email = 'rag.raggupta@gmail.com'
 var gg_hostname = '';
 
 var gg_original_alert = window.alert;
@@ -34,33 +34,18 @@ var gg_reload_timer = null;
 
 var gg_psktable = ".block_right_inner > table:nth-child(3) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1) > table:nth-child(1) tr";
 
-
 var gg_socket_listeners = [];
 
-var gg_port = chrome.runtime.connect({name: "captchaport"});
-
-
-gg_port.onMessage.addListener(function (response)
-{
-    console.log("port response received=", response);
-
-    for (var i = 0; i < gg_socket_listeners.length; ++i)
-    {
-        if (gg_socket_listeners[i])
-        {
-            gg_socket_listeners[i](response);
-        }
-    }
-});
 function ff_premain() {
     ff_get_from_storage(function (obj) {
-
-        if ("email" in obj)
-        {
-            gg_email = obj.email;
-        }
-        if ("hostname" in obj) {
-            gg_hostname = obj.hostname;
+        if (obj) {
+            if ("email" in obj)
+            {
+                gg_email = obj.email;
+            }
+            if ("hostname" in obj) {
+                gg_hostname = obj.hostname;
+            }
         }
 
         ff_main();
@@ -400,23 +385,9 @@ function ff_main()
                 return false;
             }
         });
-
-        if (gg_autocb) {
-
-
-
-        }
-
-
     }
     if (page == NEXT_BTN)
     {
-        //$("#showAppointment").attr('target', "_blank");
-        /*
-         setInterval(function () {
-         $("#showAppointment_Next_key").trigger('click');
-         }, 2000);
-         sessionStorage.setItem('form77', $("#showAppointment").html());*/
         ff_display_last_datefnd();
         var given_sel = "table > tbody > tr:nth-child(2) > td:nth-child(2)";
         var sur_sel = "table > tbody > tr:nth-child(3) > td:nth-child(2)";
@@ -464,12 +435,9 @@ function ff_main()
         if (gg_autocb) {
             $("#showAppointment_Next_key").trigger('click');
         }
-
     }
 
     else if (SELECT_LOCATION == page) {
-
-
 
 
         setInterval(function () {
@@ -481,36 +449,16 @@ function ff_main()
 
         ff_handle_changes_psk_table();
 
-        var obj = ff_get_all_location_dates();
-
-        var timing = sessionStorage.getItem('reloadtiming');
-        if (timing != null)
-        {
-            console.log("Time difference=" + (new Date() - sessionStorage.getItem('reloadtiming')));
-
-            var data = {
-                l: '7702020220',
-                obj: obj,
-                op: 'sndpskdata',
-                time: sessionStorage.getItem('reloadtiming')
-            };
-            console.log(data);
-
-            obj != null && gg_port.postMessage(data);
-            console.log(obj);
-            //color changes in psk table  
-        }
-
         ff_handle_start_stop();
 
     }
-
 }
 
 function ff_handle_start_stop() {
-    $("<img id='imgstart' src='" + browser.runtime.getURL('images/start.jpeg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
-    $("<img id='imgstop' src='" + browser.runtime.getURL('images/stop.jpg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
-
+    if ($("#imgstart").length == 0) {
+        $("<img id='imgstart' src='" + chrome.runtime.getURL('images/start.jpeg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
+        $("<img id='imgstop' src='" + chrome.runtime.getURL('images/stop.jpg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
+    }
     var reload = function () {
         sessionStorage.setItem("reloadtiming", new Date().getTime());
         window.location.reload();
@@ -544,7 +492,7 @@ function ff_handle_start_stop() {
     else if (+flag) {
         $("#imgstop").show();
         $("#imgstart").hide();
-        reload();
+        //reload();
 
     }
     else {
@@ -872,7 +820,7 @@ function ff_show_timer()
 
     setInterval(function ()
     {
-        var d = new Date(new Date().getTime() + gg_license_info.time);
+        var d = new Date(new Date().getTime());
 
         var hh = d.getHours();
         var mm = d.getMinutes();

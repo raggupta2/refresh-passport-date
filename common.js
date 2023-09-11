@@ -593,4 +593,24 @@ function ff_getDiffDate(dd_mm_yyyy) {
     return diffDays;
 }
 
+function ff_formatDate_hh_mm_ss_mmm(newDate)
+{
+    var padValue = function (value)
+    {
+        return (value < 10) ? "0" + value : value;
+    }
+
+    var sHour = newDate.getHours();
+    var sMinute = padValue(newDate.getMinutes());
+    var sSecond = padValue(newDate.getSeconds());
+
+    var sMilliseconds = (newDate.getMilliseconds() / 1000).toFixed(2).substring(1);
+
+
+    sHour = padValue(sHour);
+
+    return  sHour + ":" + sMinute + ":" + sSecond + sMilliseconds;
+}
+
+
 var gg_lastrmload_msg = null;

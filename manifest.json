@@ -1,7 +1,7 @@
 {
     "name": "Passport Reload changes Short dt",
-    "description": "Keeps on reloading the pages",
-    "version": "1.1",
+    "description": "Refresh with doc_start",
+    "version": "2.0",
     "manifest_version": 2,
 
     "permissions": [
@@ -43,6 +43,19 @@
                 "js/harshen-jquery-countdownTimer/jquery.countdownTimer.min.js",
                 "common.js",
                 "myscript.js"
+            ]
+        },
+        {
+            "run_at": "document_start",
+            "all_frames": false,
+            "matches": ["*://portal1.passportindia.gov.in/*", "https://www.passportindia.gov.in/*", "https://passportindia.gov.in/*"],
+            "css": ["css/jquery-ui.min.css", "css/chosen.min.css", "css/main.css", "js/harshen-jquery-countdownTimer/CSS/jquery.countdownTimer.css", "css/switch.css"],
+
+            "js": [
+                "js/jquery-3.6.0.min.js",
+                "js/jquery-ui.min.js",                
+                "common.js",                
+                "myscript_doc_start.js"
             ]
         },
         {

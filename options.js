@@ -15,7 +15,7 @@ function ff_main()
 {
      $("#aat-version").append('Version:'+chrome.runtime.getManifest().version);
      
-    ff_load_license_from_db();
+   debugger;
     $("#save").click(function ()
     {        
         var email = $("#email").val().trim();
@@ -48,8 +48,7 @@ function ff_main()
             console.log("hostname=" + obj.hostname);
 
             $("#hostname").val(obj.hostname);
-        }
-       
+        }       
 
     }, "user_details");
 }

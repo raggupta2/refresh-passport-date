@@ -2,13 +2,17 @@ var gg_websocket_upd = null;
 var gg_websockettimeoutid = null;
 var gg_captcha_server = "forum.bookrailticket.com";
 
+
+
 chrome.runtime.onConnect.addListener(function (port)
 {
-    console.log("Connected to a port");
+    console.log("Connected to a port1111", port);
 
     var fun = function (request) {
 
-        console.log("Background request received:%o", request);
+        console.log("Background1 request received:", request);
+
+        console.log("predicate=" + ('op' in request && request.op == "sndpskdata"));
 
         if ('op' in request && request.op == "sndpskdata")
         {
@@ -46,7 +50,7 @@ chrome.runtime.onConnect.addListener(function (port)
 
                 } //on open event
                 gg_websocket_upd.onclose = function (evt)
-                { /* do stuff */
+                {
                     console.log("Socket closed");
                     gg_websocket_upd = null;
                 }; //on close event
@@ -100,7 +104,7 @@ chrome.runtime.onConnect.addListener(function (port)
                 }; //on message event
 
                 console.log("gg_websocket_upd already open");
-                ff_sendRequest(request,gg_websocket_upd);
+                ff_sendRequest(request, gg_websocket_upd);
             }
         }
 
@@ -111,14 +115,19 @@ chrome.runtime.onConnect.addListener(function (port)
 
     }
 
-
+    console.log("aabbcc1111");
     //console.assert(port.name == "captchaport");
-    port.onMessage.addListener(fun
-            );
+    port.onMessage.addListener(fun);
+
+    console.log("aabbcc2222");
 });
+
+
+
+
 function ff_sendRequest(request, gg_websocket)
 {
-    
+
     console.log("request=", request);
 
     var payload = JSON.stringify(request);

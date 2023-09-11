@@ -2,20 +2,16 @@
 
 
 var slot_page_request_time = null;
-
 var onbefore_sid = null;
 var slow_sid = null;
 
 var gg_hostname = 'ua';
 var gg_email = 'ddn.job@gmail.com';
 
-
 ff_load_license_from_db();
-
 
 chrome.runtime.onMessage.addListener(
         function (request, sender, sendResponse) {
-
             console.log(sender.tab ?
                     "from a content script:" + sender.tab.url :
                     "from the extension");
@@ -24,35 +20,29 @@ chrome.runtime.onMessage.addListener(
                 var obj = {slot_page_request_time: slot_page_request_time};
                 sendResponse(obj);
             }
-
         }
 );
 
-
 console.log("Background process started");
-
 
 var urlarr = [
     "https://portal1.passportindia.gov.in/AppOnlineProject/secure/SearchArnAction",
     "https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline",
     //  "https://portal1.passportindia.gov.in/AppOnlineProject/secure/showSlotsByLocation",
     "https://portal1.passportindia.gov.in/AppOnlineProject/secure/loginActionWorkList"
-
 ];
 
+//https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline
 
 chrome.webRequest.onBeforeRequest.addListener(
         function (details)
         {
-
             if (details.url == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/bookAppointOnline' && details.type == "main_frame")
-
             {
                 ff_get_from_storage(function (obj) {
 
                     var hostname = 'empty';
-                    var email = 'ddn.job@gmail.com'
-
+                    var email = 'ddn.job@gmail.com';
 
                     if ("hostname" in obj)
                     {
@@ -70,7 +60,6 @@ chrome.webRequest.onBeforeRequest.addListener(
                             op: 'email2', //captcha decoding op
                             email: email.toLowerCase(),
                             hostname: hostname,
-
                         }
 
                         var ws = new WebSocket("wss://www.updateadhaar.com:31334");
@@ -87,7 +76,6 @@ chrome.webRequest.onBeforeRequest.addListener(
 
                 }, "user_details");
             }
-
 
             if (details.url == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/showSlotsByLocation' && details.type == "main_frame")
             {
@@ -118,7 +106,7 @@ chrome.webRequest.onBeforeRequest.addListener(
                         }
                     });
 
-                }, 40000);  //if no activity in 40secods then reload page   
+                }, 40000);  //if no activity in 40secods then reload page
 
                 slow_sid && clearTimeout(slow_sid);
 
@@ -144,10 +132,25 @@ chrome.webRequest.onBeforeRequest.addListener(
                 }, 10 * 60 * 1000);  //if no activi
             }
 
-
             return {cancel: false}; //allow all other calls
         },
         {
             urls: ["https://passportindia.gov.in/*", "https://portal1.passportindia.gov.in/*"]
         },
         ["requestBody"]);
+
+
+false && chrome.webRequest.onCompleted.addListener(
+        function (details)
+        {
+            console.log(details);
+            console.log("before debugger");
+
+            if (details.type == 'main_frame')
+            {
+                ff_rmlog("oncompleted=" + ff_formatDate_hh_mm_ss_mmm(new Date()));
+            }
+        },
+        {
+            urls: ['https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline']
+        }, ['responseHeaders']);
