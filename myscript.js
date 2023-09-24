@@ -512,7 +512,7 @@ function ff_main()
         }, "clicktime");
     }
 
-    $("#captcha").remove();
+  
 }
 
 function ff_load_remote_login_passwd() {
