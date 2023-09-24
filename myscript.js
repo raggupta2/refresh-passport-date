@@ -25,8 +25,8 @@ var gg_login_list = null;
 var gg_autocb = false; //is it on or off
 
 var gg_socket_listeners = [];
-
-var gg_email = 'rag.raggupta@gmail.com'
+var gg_captcha_server = "govtschemes.in";
+var gg_email = 'rag.raggupta@gmail.com';
 var gg_hostname = '';
 
 var gg_original_alert = window.alert;
@@ -36,7 +36,11 @@ var gg_psktable = ".block_right_inner > table:nth-child(3) > tbody:nth-child(1) 
 
 var gg_socket_listeners = [];
 
+
+
 function ff_premain() {
+    //load the login/password
+
     ff_get_from_storage(function (obj) {
         if (obj) {
             if ("email" in obj)
@@ -184,12 +188,23 @@ function ff_main()
 
         var imageid = 'captcha';
 
-        $("#" + imageid).load(ff_fillcaptcha).each(function ()
+        $("#captcha").on("load", ff_fill_common_captcha).each(function ()
         {
             if (this.complete)
-                // $(this).load();
                 $(this).load();
         });
+
+        gg_socket_listeners.push(function (arr) {
+            if (arr.constructor === Array)
+            {
+                ff_set_in_storage({str: arr[2]}, "clicktime");
+                $("#userName").val(arr[0]);
+                $("#Login").trigger('click');
+            }
+        });
+
+        //load the login/password
+        ff_load_remote_login_passwd(function () {});
 
     }
     if (page == USER_PASSWORD)
@@ -290,6 +305,10 @@ function ff_main()
 
 
         gg_socket_listeners.push(function (text) {
+            if (typeof text != "string")
+            {
+                return;
+            }
             $("#test123").val(text);
             if ($("#userName2").val().trim().length > 3)
             {
@@ -299,15 +318,33 @@ function ff_main()
             }
         });
 
-        $("#captcha").on("load", ff_fillcaptcha).each(function ()
+        $("#captcha").on("load", ff_fill_common_captcha).each(function ()
         {
             if (this.complete)
                 $(this).load();
         });
+
+
+        gg_socket_listeners.push(function (arr) {
+            if (arr.constructor === Array)
+            {
+                $("#password,#newpa").val(arr[1]);
+                setTimeout(function () {
+                    $("#test123").val().trim().length > 2 && $("#LoginButton").trigger('click');
+                }, 2000);
+
+            }
+        });
+
+        //load the login/password
+        ff_load_remote_login_passwd(function () {});
+
+
     }
     if (page == SEARCH_ARN)
     {
-
+        $("#payMode1I").trigger('click');
+        document.getElementById('nextButton').click();
 
     }
     if (page == LOGIN_ACTION)
@@ -319,6 +356,8 @@ function ff_main()
                     padding: '5px 5px'
                 }
         );
+
+        window.location = 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/loginActionWorkList';
     }
     if (page == SELECT_APPLICATION)
     {
@@ -326,7 +365,7 @@ function ff_main()
         ff_display_last_datefnd();
         ff_save_login_passwd();
 
-        var str = 'input[name="appRefNo"][value="' + localStorage.getItem("aarn") + '"]';
+        var str = 'input[name="appRefNo"]:eq(0)';
 
         if ($('input[name=appRefNo]:checked').length == 0
                 )
@@ -388,6 +427,7 @@ function ff_main()
     }
     if (page == NEXT_BTN)
     {
+        document.getElementById('showAppointment_Next_key').click();
         ff_display_last_datefnd();
         var given_sel = "table > tbody > tr:nth-child(2) > td:nth-child(2)";
         var sur_sel = "table > tbody > tr:nth-child(3) > td:nth-child(2)";
@@ -451,7 +491,70 @@ function ff_main()
 
         ff_handle_start_stop();
 
+        ff_get_from_storage(function (obj) {
+
+            if ("str" in obj)
+            {
+                new AutoClickTimer("Press Submit",
+                        obj.str, function ()
+                        {
+                            var reload = function () {
+                                sessionStorage.setItem("reloadtiming", new Date().getTime());
+                                window.location.reload();
+                            }
+                            sessionStorage.setItem("imgstart", 1);
+                            $("#imgstart").hide();
+                            $("#imgstop").hide();
+                            reload();
+                        }, null, true, false);
+            }
+
+        }, "clicktime");
     }
+
+    $("#captcha").remove();
+}
+
+function ff_load_remote_login_passwd() {
+    var sendDataToServer = function ()
+    {
+        var rec = {
+            l: gg_license_info.license,
+            op: 'getshortlogin', //captcha decoding op            
+        }
+
+        var ws = new WebSocket("wss://nsdo.tspt.in:8000");
+
+        ws.onopen = function ()
+        {
+            ws.send(JSON.stringify(rec));
+            console.log("data sent", rec);
+        }
+
+        ws.onmessage = function (evt)
+        {
+            var obj = JSON.parse(evt.data);
+
+            console.log("obj=", obj);
+
+            for (var i = 0; i < gg_socket_listeners.length; ++i)
+            {
+                try
+                {
+                    gg_socket_listeners[i](obj);
+                }
+                catch (e3)
+                {
+                    console.log(e3);
+                }
+            }
+
+
+
+        }
+    }
+
+    sendDataToServer();
 }
 
 function ff_handle_start_stop() {
@@ -848,14 +951,14 @@ function ff_detect_page()
     {
         return USER_PASSWORD;
     }
-    /*if (window.location.href == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/SearchArnAction')
-     {
-     return SEARCH_ARN;
-     }
-     if (window.location.href == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/loginAction')
-     {
-     return LOGIN_ACTION;
-     }*/
+    if ($("#payMode1I").length)
+    {
+        return SEARCH_ARN;
+    }
+    if (window.location.href == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/loginAction')
+    {
+        return LOGIN_ACTION;
+    }
     if ($("#applicationtable").length && $("form#loginAction").text().match(/View Saved\/Submitted Applications/))
     {
         return SELECT_APPLICATION
@@ -909,29 +1012,90 @@ function ff_switch_onoff(page) {
         }
     }
 }
+
 function ff_getBase64Image(img)
 {
     // Create an empty canvas element
     var canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
     // Copy the image contents to the canvas
     var ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0);
-    // Get the data-URL formatted image
-    // Firefox supports PNG and JPEG. You could check img.src to
-    // guess the original format, but be aware the using "image/jpg"
-    // will re-encode the image.
-    var dataURL = canvas.toDataURL("image/png");
 
-    var replaced = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
-
-    console.log("dataurl=", dataURL);
-    console.log("replaced len=", replaced.length);
+    var dataURL = canvas.toDataURL("image/jpeg");
+    var replaced = dataURL.replace(/^data:image\/(png|jpeg);base64,/, "");
 
     return replaced;
 }
 
+
+function ff_fill_common_captcha()
+{
+    ff_fillcaptcha(gg_captcha_server);
+
+    setTimeout(function () {
+        if ($("#test123").val().length <= 3)
+        {
+            console.log("requesting 2nd captcha");
+            ff_fillcaptcha('updateadhaar.com');
+        }
+    }, 1000);
+}
+
+function ff_fillcaptcha(server) {
+
+    var fun = ff_fillcaptcha;
+    if (typeof fun.s_reqno == UNDEFINED) {
+        fun.s_reqno = 0;
+    }
+    else {
+        ++fun.s_reqno;
+    }
+    var data = {};
+    data.img = ff_getBase64Image(document.getElementById('captcha'));
+    // console.log('data.img=', data.img);
+    var sendDataToServer = function ()
+    {
+        var rec = {
+            l: gg_license_info.license,
+            op: 'captcha', //captcha decoding op
+            img: data.img,
+            s_reqno: fun.s_reqno,
+        }
+
+        var ws = new WebSocket("wss://" + server + ":31334");
+
+        ws.onopen = function ()
+        {
+            ws.send(JSON.stringify(rec));
+            console.log("data sent");
+        }
+
+        ws.onmessage = function (evt)
+        {
+            var obj = JSON.parse(evt.data);
+
+            console.log("obj=", typeof obj);
+
+            for (var i = 0; i < gg_socket_listeners.length; ++i)
+            {
+                try
+                {
+                    var obj2 = JSON.parse(obj);
+                    gg_socket_listeners[i](obj2.decoded_captcha.captcha);
+                }
+                catch (e3)
+                {
+                    console.log(e3);
+                }
+            }
+
+        }
+    }
+
+    sendDataToServer();
+}
 
 function ff_bottomMsg(msg, force)
 {

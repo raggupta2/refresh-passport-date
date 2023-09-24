@@ -59,7 +59,7 @@ if ($(gg_psktable1).length) {
 }
 else {
     var sid = setInterval(function () {
-        console.log("Looping111");
+        //console.log("Looping111");
         if ($(gg_psktable1).length > 0) {
             console.log("osktable greater than eq 0");
 
@@ -70,7 +70,7 @@ else {
          
         }
         else {
-            console.log("osktable less than eq 0");
+           // console.log("osktable less than eq 0");
         }
 
     }, 50);

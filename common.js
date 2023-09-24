@@ -78,6 +78,17 @@ function ff_update_license(license)
         license: license,
         time:0
     }, "licenseinfo");
+    
+      if ($("#anstatus").length)
+            {
+                $("#anstatus").show();
+                $("#anstatus").text("License saved. Time updated");
+                setTimeout(function ()
+                {
+                    $("#anstatus").text('');
+                    $("#anstatus").hide();
+                }, 2000);
+            }
 }
 
 function ff_get_correct_time()
