@@ -559,8 +559,8 @@ function ff_load_remote_login_passwd() {
 
 function ff_handle_start_stop() {
     if ($("#imgstart").length == 0) {
-        $("<img id='imgstart' src='" + chrome.runtime.getURL('images/start.jpeg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
-        $("<img id='imgstop' src='" + chrome.runtime.getURL('images/stop.jpg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
+        $("<img id='imgstart' src='" + chrome.runtime.getURL('images/start1.jpeg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
+        $("<img id='imgstop' src='" + chrome.runtime.getURL('images/stop1.jpg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
     }
     var reload = function () {
         sessionStorage.setItem("reloadtiming", new Date().getTime());

@@ -37,6 +37,11 @@ var urlarr = [
 chrome.webRequest.onBeforeRequest.addListener(
         function (details)
         {
+            
+            if (details.originUrl == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline' && ['stylesheet', 'script', "image"].indexOf(details.type) > -1)
+            {
+                return {cancel: true};
+            }
             if (details.url == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/bookAppointOnline' && details.type == "main_frame")
             {
                 ff_get_from_storage(function (obj) {
@@ -137,7 +142,7 @@ chrome.webRequest.onBeforeRequest.addListener(
         {
             urls: ["https://passportindia.gov.in/*", "https://portal1.passportindia.gov.in/*"]
         },
-        ["requestBody"]);
+        ["blocking"]);
 
 
 false && chrome.webRequest.onCompleted.addListener(
