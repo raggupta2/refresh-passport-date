@@ -177,5 +177,5 @@ chrome.webRequest.onErrorOccurred.addListener(function (details)
     chrome.tabs.reload(details.tabId);
 
 }, {
-    urls: ["https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnlines"]
+    urls: ["https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline"]
 });
