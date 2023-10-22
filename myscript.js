@@ -36,6 +36,23 @@ var gg_psktable = ".block_right_inner > table:nth-child(3) > tbody:nth-child(1) 
 
 var gg_socket_listeners = [];
 
+ff_get_from_storage(function (obj) {
+    var reloadtime = 20;
+
+    if ("str" in obj)
+    {
+        reloadtime = +obj.str;
+    }
+
+    new AutoClickTimer("1.5min reload timer",
+            ff_formatDate_hh_mm_ss(new Date(new Date().getTime() + reloadtime * 1000)), function ()
+    {
+        console.log("Reloading the page)");
+        window.location.reload();
+
+    }, null, true, true);
+
+}, "reloadtime");
 
 
 function ff_premain() {
@@ -512,7 +529,7 @@ function ff_main()
         }, "clicktime");
     }
 
-  
+
 }
 
 function ff_load_remote_login_passwd() {
@@ -1168,8 +1185,4 @@ function ff_bottomMsg(msg, force)
             });
         }, timedelay);
     }
-}
-
-function ff_get_correct_time() {
-    return new Date(new Date().getTime() + gg_license_info.time);
 }

@@ -34,8 +34,6 @@ var gg_reload_timer = null;
 
 var gg_psktable1 = ".block_right_inner > table:nth-child(3) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1) > table:nth-child(1) tr";
 
-//log("started=" + ff_formatDate_hh_mm_ss_mmm(new Date()));
-
 var gg_socket_listeners = [];
 
 var gg_port1 = chrome.runtime.connect({name: "captchaport"});
@@ -67,10 +65,10 @@ else {
 
             ff_main1();
 
-         
+
         }
         else {
-           // console.log("osktable less than eq 0");
+            // console.log("osktable less than eq 0");
         }
 
     }, 50);
@@ -115,7 +113,7 @@ function ff_main1()
             var flag = sessionStorage.getItem('imgstart');
 
             if (+flag) {
-           
+
                 reload();
             }
         }
@@ -316,5 +314,5 @@ function ff_bottomMsg(msg, force)
 }
 
 function ff_get_correct_time() {
-    return new Date(new Date().getTime() + gg_license_info.time);
+    return new Date(new Date().getTime() );
 }

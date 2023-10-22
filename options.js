@@ -13,14 +13,27 @@ $(document).ready(function ()
 
 function ff_main()
 {
-     ff_load_license_from_db();
-     $("#aat-version").append('Version:'+chrome.runtime.getManifest().version);
-   
+    ff_load_license_from_db();
+    $("#aat-version").append('Version:' + chrome.runtime.getManifest().version);
+
+    ff_get_from_storage(function (obj) {
+       
+        if ("str" in obj)
+        {
+            $("#reloadtime").val(obj.str);
+        }
+
+    }, "reloadtime");
+
     $("#save").click(function ()
-    {      
-          var str = $("#clicktime").val().trim();
+    {
+        debugger;
+        var str = $("#reloadtime").val().trim();
+        ff_set_in_storage({str: str}, "reloadtime");
+
+        var str = $("#clicktime").val().trim();
         var ret;
-       debugger;
+
         if (str.length) {
             if ((str.length < 5 || (!str.match(/^\d+:\d+:\d+$/) && !str.match(/^\d+:\d+:\d+\.\d\d$/))))
             {
@@ -70,15 +83,15 @@ function ff_main()
 
         var hostname = $("#hostname").val().trim();
 
-        ff_set_in_storage({         
+        ff_set_in_storage({
             email: email,
-            hostname: hostname,          
+            hostname: hostname,
         }, "user_details");
         ff_update_license($("#anu-license-1").val().trim());
     });
 
     ff_get_from_storage(function (obj) {
-       
+
         if ("email" in obj)
         {
             console.log("email=" + obj.email);
@@ -90,11 +103,11 @@ function ff_main()
             console.log("hostname=" + obj.hostname);
 
             $("#hostname").val(obj.hostname);
-        }       
+        }
 
     }, "user_details");
-    
-     ff_get_from_storage(function (obj) {
+
+    ff_get_from_storage(function (obj) {
         if ("str" in obj)
         {
             $("#clicktime").val(obj.str);

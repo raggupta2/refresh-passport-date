@@ -93,7 +93,7 @@ function ff_update_license(license)
 
 function ff_get_correct_time()
 {
-    return new Date(new Date().getTime() + gg_license_info.time);
+    return new Date(new Date().getTime());
 }
 
 
@@ -236,7 +236,7 @@ function pad(n)
 }
 
 function AutoClickTimer(title, autostart_time, start_cb, stop_cb, click_if_time_passed, usePCTime)
-{
+{   
     var usesettime = true;
     this.up_down_value = 0;
     //there is stop_timer method to stop this timer
