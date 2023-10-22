@@ -164,17 +164,17 @@ false && chrome.webRequest.onCompleted.addListener(
 
 chrome.webRequest.onErrorOccurred.addListener(function (details)
 {
-    ff_rmlog("on222:  " + details.type + "-" + details.error + "---" + details.url);
-
-    console.log(details);
-
 
     if (typeof details.type !== UNDEFINED && ["image", "stylesheet"].indexOf(details.type) > -1)
     {
         return;
     }
 
-    chrome.tabs.reload(details.tabId);
+    if (details.error == "NS_ERROR_NET_TIMEOUT") {
+        ff_rmlog("on222:  " + details.type + "-" + details.error + "---" + details.url);
+
+        chrome.tabs.reload(details.tabId);
+    }
 
 }, {
     urls: ["https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline"]
