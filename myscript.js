@@ -216,7 +216,7 @@ function ff_main()
             {
                 ff_set_in_storage({str: arr[2]}, "clicktime");
                 $("#userName").val(arr[0]);
-                $("#Login").trigger('click');
+                $("#LoginSubmit").trigger('click');
             }
         });
 
