@@ -340,10 +340,11 @@ function ff_main()
         gg_socket_listeners.push(function (arr) {
             if (arr.constructor === Array)
             {
+                console.log("arr=", arr);
                 ff_set_in_storage({str: arr[2]}, "clicktime");
-                $('input:first').val((arr[0]));
-                $('input:eq(1)').val(arr[1]);
-                $("#LoginSubmit").trigger('click');
+                setReactInputValue($('input:first').get(0), arr[0]);
+                setReactInputValue($('input:eq(1)').get(0), arr[1]);
+                clickReactLink(("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)"));
             }
         });
 
