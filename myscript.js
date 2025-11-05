@@ -1,5 +1,13 @@
 "use strict";
 
+if (window.location.href == 'https://services1.passportindia.gov.in/forms/PreLogin')
+{
+    window.location = "https://services1.passportindia.gov.in/forms/login";
+}
+
+console.log('Loaded', location.href, performance.now());
+
+
 var USER_LOGIN = 2;
 
 var USER_PASSWORD = 4;
@@ -36,7 +44,7 @@ var gg_psktable = ".block_right_inner > table:nth-child(3) > tbody:nth-child(1) 
 
 var gg_socket_listeners = [];
 
-ff_get_from_storage(function (obj) {
+false && ff_get_from_storage(function (obj) {
     var reloadtime = 20;
 
     if ("str" in obj)
@@ -58,6 +66,11 @@ ff_get_from_storage(function (obj) {
 function ff_premain() {
     //load the login/password
 
+    if (window.top !== window.self) {
+        confirm("iframe?");
+        return;
+    }
+
     ff_get_from_storage(function (obj) {
         if (obj) {
             if ("email" in obj)
@@ -78,7 +91,84 @@ function ff_premain() {
 
 ff_load_license_from_db(ff_premain);
 
+function setReactInputValue(el, value) {
+    const lastValue = el.value;
+    el.value = value;
 
+    const event = new Event('input', {bubbles: true});
+    // React attaches synthetic handlers that rely on value trackers
+    const tracker = el._valueTracker;
+    if (tracker) {
+        tracker.setValue(lastValue);
+    }
+    el.dispatchEvent(event);
+}
+
+function simulateClick(el) {
+    const evt = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+    });
+    el.dispatchEvent(evt);
+}
+
+function clickReactLink(selector) {
+    const code = `
+    (function() {
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (el) {
+        const evt = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        });
+        el.dispatchEvent(evt);
+        console.log('React link clicked:', el);
+      } else {
+        console.warn('Element not found for selector:', ${JSON.stringify(selector)});
+      }
+    })();
+  `;
+    const s = document.createElement('script');
+    s.textContent = code;
+    (document.head || document.documentElement).appendChild(s);
+    s.remove();
+}
+
+
+
+function reactSafeClick(target) {
+    if (!target)
+        return false;
+    //  log('Clicking element:', target);
+//    ff_rmlog(`Clicking element: ${target?.outerHTML || target}`);
+    target.scrollIntoView({block: 'center', inline: 'center'});
+    target.focus && target.focus();
+
+    ['pointerover', 'pointerenter', 'pointerdown', 'pointerup', 'click']
+            .forEach(t => target.dispatchEvent(new PointerEvent(t, {bubbles: true, cancelable: true, view: window})));
+
+    ['keydown', 'keypress', 'keyup']
+            .forEach(t => target.dispatchEvent(new KeyboardEvent(t, {bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13})));
+
+    ['keydown', 'keypress', 'keyup']
+            .forEach(t => target.dispatchEvent(new KeyboardEvent(t, {bubbles: true, cancelable: true, key: ' ', code: 'Space', keyCode: 32})));
+
+    target.click();
+
+    let el = target;
+    while (el && el !== document.body) {
+        const key = Object.keys(el).find(k => k.startsWith('__reactProps$'));
+        if (key && el[key] && typeof el[key].onClick === 'function') {
+            log('Triggering React internal click handler for', key);
+            el[key].onClick({type: 'click', currentTarget: el});
+            break;
+        }
+        el = el.parentElement;
+    }
+    return true;
+}
 function ff_make_date_bold() {
     $("span[style]").each(function () {
         var txt = $(this).text();
@@ -183,45 +273,96 @@ function ff_main()
     }
     if (page == USER_LOGIN)
     {
+
         ff_display_last_datefnd();
-        $("#userName").css({'width': '700px'});
-        $("#userName").removeAttr('maxlength');
-        $("#userName").attr('size', '60');
-        $("#userName").attr('maxlength', '60');
-        $("#userName").val(localStorage.getItem('userName'));
-        ff_get_from_storage(function (obj) {
-            console.log('usrname recv=', obj);
-            $("#userName").val(obj);
-        }, "userName");
+
+        console.log("already save username=" + localStorage.getItem('userName'));
+        console.log("already save passwd=" + localStorage.getItem('passwd'));
+
+        localStorage.removeItem('userName');
+        localStorage.removeItem('passwd');
+
+        if (localStorage.getItem('userName')) {
+            setReactInputValue($('input:first').get(0), localStorage.getItem('userName'));
+        }
+
+        if (localStorage.getItem('passwd')) {
+            setReactInputValue($('input:eq(1)').get(0), localStorage.getItem('passwd'));
+        }
+
+        if ($('input:first').val().trim().length > 2 && $('input:eq(1)').val().trim().length > 2)
+        {
+            clickReactLink(("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)"));
+        }
+
+        setInterval(function () {
+            console.log("already save username11=" + localStorage.getItem('userName'));
+            console.log("already save passwd11=" + localStorage.getItem('passwd'));
+
+            if (localStorage.getItem('userName'))
+            {
+                $('input:first').val(localStorage.getItem('userName'));
+            }
+
+            if (localStorage.getItem('passwd'))
+            {
+                $('input:eq(1)').val(localStorage.getItem('passwd'));
+            }
+
+            if ($('input:first').val().trim().length > 2 && $('input:eq(1)').val().trim().length > 2)
+            {
+
+                setTimeout(function () {
+                    // $("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)").click()
+                }, 500);
+            }
+
+        }, 5000);
+
+        /*
+         ff_get_from_storage(function (obj) {
+         console.log('usrname recv=', obj);
+         $("input:eq(0)").val(obj);
+         }, "userName");
+         */
         setInterval(function ()
         {
-            if ($("#userName").val().trim().length > 4)
+            if ($('input:first').val().trim().length > 2 && $('input:eq(1)').val().trim().length)
             {
-                ff_set_in_storage($("#userName").val().trim(), 'userName');
+                localStorage.setItem('userName', $('input:first').val().trim());
+                localStorage.setItem('passwd', $('input:eq(1)').val().trim());
+                console.log("Saved");
             }
         }, 1000);
 
         ff_display_all_logins();
 
-        var imageid = 'captcha';
-
-        $("#captcha").on("load", ff_fill_common_captcha).each(function ()
-        {
-            if (this.complete)
-                $(this).load();
-        });
-
         gg_socket_listeners.push(function (arr) {
             if (arr.constructor === Array)
             {
                 ff_set_in_storage({str: arr[2]}, "clicktime");
-                $("#userName").val(arr[0]);
+                $('input:first').val((arr[0]));
+                $('input:eq(1)').val(arr[1]);
                 $("#LoginSubmit").trigger('click');
             }
         });
 
         //load the login/password
         ff_load_remote_login_passwd(function () {});
+
+
+        if ($('input:first').val().trim().length > 2 && $('input:eq(1)').val().trim().length > 4) {
+            var findDivsWithExactText = function (text) {
+                return Array.from(document.querySelectorAll('div'))
+                        .filter(d => d.textContent.trim() === text);
+            }
+            var findFirstDivWithExactText = function () {
+                var text = "Sign In";
+                const els = findDivsWithExactText(text);
+                return els.length ? els[0] : null;
+            }
+
+        }
 
     }
     if (page == USER_PASSWORD)
@@ -276,8 +417,7 @@ function ff_main()
             if ($("#password").val().trim().length)
             {
                 $("#test123").focus();
-            }
-            else
+            } else
             {
                 $("#newpa").focus();
             }
@@ -480,8 +620,7 @@ function ff_main()
                                     'text-decoration': 'line-through',
                                     border: '2px solid red',
                                 });
-                    }
-                    else
+                    } else
                     {
                         // $("#showAppointment_Next_key").trigger('click');
                     }
@@ -492,9 +631,7 @@ function ff_main()
         if (gg_autocb) {
             $("#showAppointment_Next_key").trigger('click');
         }
-    }
-
-    else if (SELECT_LOCATION == page) {
+    } else if (SELECT_LOCATION == page) {
 
 
         setInterval(function () {
@@ -559,8 +696,7 @@ function ff_load_remote_login_passwd() {
                 try
                 {
                     gg_socket_listeners[i](obj);
-                }
-                catch (e3)
+                } catch (e3)
                 {
                     console.log(e3);
                 }
@@ -608,14 +744,12 @@ function ff_handle_start_stop() {
     {
         $("#imgstop").hide();
         $("#imgstart").show();
-    }
-    else if (+flag) {
+    } else if (+flag) {
         $("#imgstop").show();
         $("#imgstart").hide();
         //reload();
 
-    }
-    else {
+    } else {
         $("#imgstart").show();
         $("#imgstop").hide();
     }
@@ -881,8 +1015,7 @@ function ff_save_login_passwd()
                 {
 
                     var userdetails = list[login];
-                }
-                else
+                } else
                 {
                     userdetails = {};
                     userdetails.login = login;
@@ -960,9 +1093,10 @@ function ff_detect_page()
         return SELECT_DATE;
 
     }
-    if (window.location.href.match(/userLogin$/))
+    //if (window.location.href.match(/passportindia.gov.in\/forms\/PreLogin/) && $("input").length)
+    if (window.location.href.indexOf('https://services1.passportindia.gov.in/forms/login') > -1)
     {
-        return 2;
+        return USER_LOGIN;
     }
     if ($("#password").length && $("#test123").length)
     {
@@ -1023,9 +1157,9 @@ function ff_switch_onoff(page) {
     }
     if (page == USER_LOGIN)
     {
-        if ($("#userName").val().trim().length > 3)
+        if ($("input:first").val().trim().length > 3)
         {
-            gg_autocb && $("#Login").trigger('click');
+            //   gg_autocb && $("#Login").trigger('click');
         }
     }
 }
@@ -1065,8 +1199,7 @@ function ff_fillcaptcha(server) {
     var fun = ff_fillcaptcha;
     if (typeof fun.s_reqno == UNDEFINED) {
         fun.s_reqno = 0;
-    }
-    else {
+    } else {
         ++fun.s_reqno;
     }
     var data = {};
@@ -1101,8 +1234,7 @@ function ff_fillcaptcha(server) {
                 {
                     var obj2 = JSON.parse(obj);
                     gg_socket_listeners[i](obj2.decoded_captcha.captcha);
-                }
-                catch (e3)
+                } catch (e3)
                 {
                     console.log(e3);
                 }
@@ -1144,8 +1276,7 @@ function ff_bottomMsg(msg, force)
     if (!ff_bottomMsg.msgarr)
     {
         ff_bottomMsg.msgarr = new Array();
-    }
-    else
+    } else
     {
     }
     ff_bottomMsg.msgarr.push(msg);
@@ -1171,8 +1302,7 @@ function ff_bottomMsg(msg, force)
                 delete ff_bottomMsg.msgarr[0];
             });
         }, timedelay);
-    }
-    else
+    } else
     {
         console.log("in notification1");
         $("#bt-notification1 .btnmatter").text(msg);
