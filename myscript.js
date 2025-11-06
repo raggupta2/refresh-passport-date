@@ -1,5 +1,4 @@
 "use strict";
-
 if (window.location.href == 'https://services1.passportindia.gov.in/forms/PreLogin')
 {
     window.location = "https://services1.passportindia.gov.in/forms/login";
@@ -168,6 +167,113 @@ function reactSafeClick(target) {
         el = el.parentElement;
     }
     return true;
+}
+
+function ff_find_menu_dots() {
+    console.log('Finding menu dots');
+
+    // Check all divs with Entypo font
+    console.log('\n Checking Entypo div ');
+    const entyopDivs = document.querySelectorAll('div[style*="Entypo"]');
+    console.log('Total divs with Entypo font:', entyopDivs.length);
+
+    for (let i = 0; i < entyopDivs.length; i++) {
+        const el = entyopDivs[i];
+    }
+
+    // First Entypo div
+    const entypoDiv = document.querySelector('div[style*="Entypo"]');
+    if (entypoDiv) {
+        console.log('Found Entypo div, attempting click...');
+        reactSafeClick(entypoDiv);
+        console.log('Clicked Entypo div');
+        return entypoDiv;
+    }
+
+    console.log('No menu button found!');
+    return null;
+}
+
+setTimeout(() => {
+    console.log('\n\n Debugging:', new Date().toLocaleTimeString());
+    ff_find_menu_dots();
+    ff_click_view_button();
+    ff_click_pay_and_schedule();
+}, 1500);
+
+function ff_click_view_button() {
+    console.log('[ff_click_view_button] Waiting for View popup...');
+
+    setTimeout(() => {
+        console.log('[ff_click_view_button] Scanning View text...');
+
+        const candidates = Array.from(document.querySelectorAll('div[dir="auto"]'));
+
+        for (const el of candidates) {
+            if (!el || el.offsetParent === null)
+                continue;
+            const txt = (el.textContent || '').trim().toLowerCase();
+            if (txt === 'view') {
+                console.log('[ff_click_view_button] Found View text:', el);
+
+                const btn = el.closest('[data-focusable="true"]');
+                if (btn && btn.offsetParent !== null) {
+                    console.log('[ff_click_view_button] Clicking button wrapper:', btn);
+                    reactSafeClick(btn);
+                    return;
+                }
+
+                console.log('[ff_click_view_button] View text found but wrapper missing');
+            }
+        }
+
+        console.log('[ff_click_view_button] View not found in popup');
+    }, 1000);
+}
+
+function ff_click_pay_and_schedule(maxAttempts = 20) {
+    console.log('[ff_click_pay_and_schedule] Scanning for button...');
+
+    let attempts = 0;
+    const interval = setInterval(() => {
+        attempts++;
+
+        const nodes = document.querySelectorAll('div[dir="auto"]');
+        for (const el of nodes) {
+            if (!el)
+                continue;
+            const isVisible =
+                    el.offsetParent !== null &&
+                    getComputedStyle(el).visibility !== 'hidden' &&
+                    getComputedStyle(el).opacity > 0;
+
+            if (!isVisible)
+                continue;
+
+            const text = (el.textContent || '').trim().toLowerCase();
+
+            if (text.includes('pay') && text.includes('schedule')) {
+                console.log('Found visible button text:', el);
+
+                const btn = el.closest('[data-focusable="true"]');
+                if (btn && btn.offsetParent !== null) {
+                    console.log('Clicking button wrapper:', btn);
+
+                    setTimeout(() => reactSafeClick(btn), 150);
+
+                    clearInterval(interval);
+                    return;
+                } else {
+                    console.log('Wrapper not found for button');
+                }
+            }
+        }
+
+        if (attempts >= maxAttempts) {
+            console.log('Button not found after max attempts');
+            clearInterval(interval);
+        }
+    }, 500);
 }
 function ff_make_date_bold() {
     $("span[style]").each(function () {
@@ -521,47 +627,54 @@ function ff_main()
     {
         debugger;
         ff_display_last_datefnd();
+
+        setTimeout(() => {
+            console.log('\n\n Debugging:', new Date().toLocaleTimeString());
+            ff_find_menu_dots();
+            ff_click_view_button();
+            ff_click_pay_and_schedule();
+        }, 1500);
         //ff_save_login_passwd();
-        
-     
-        var reactClick = function (el) {
-            el.dispatchEvent(new MouseEvent('mouseover', {bubbles: true}));
-            el.dispatchEvent(new MouseEvent('mousedown', {bubbles: true}));
-            el.dispatchEvent(new MouseEvent('mouseup', {bubbles: true}));
-            el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-        }
 
-        const menuDiv = Array.from(document.querySelectorAll('div'))
-                .find(el => el.textContent.trim() === '');
-
-        if (menuDiv) {
-            // confirm('menudiv found');
-            menuDiv.focus();
-            menuDiv.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
-
-            reactClick(menuDiv);
-            setTimeout(function () {
-                reactClick(menuDiv);
-                //menuDiv.click();
-                //simulateClick(menuDiv);
-            }, 2000);
-
-            setTimeout(() => {
-                const viewDiv = Array.from(document.querySelectorAll('div'))
-                        .find(el => el.textContent.trim() === 'View');
-//                if (viewDiv)
-//                    viewDiv.click();
-//                simulateClick(viewDiv);
-                reactClick(viewDiv);
-
-                viewDiv.focus();
-                viewDiv.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
-
-            }, 1500);
-
-            // simulateClick(div);
-        }
-
+        /*
+         var reactClick = function (el) {
+         el.dispatchEvent(new MouseEvent('mouseover', {bubbles: true}));
+         el.dispatchEvent(new MouseEvent('mousedown', {bubbles: true}));
+         el.dispatchEvent(new MouseEvent('mouseup', {bubbles: true}));
+         el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+         }
+         
+         const menuDiv = Array.from(document.querySelectorAll('div'))
+         .find(el => el.textContent.trim() === '');
+         
+         if (menuDiv) {
+         // confirm('menudiv found');
+         menuDiv.focus();
+         menuDiv.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+         
+         reactClick(menuDiv);
+         setTimeout(function () {
+         reactClick(menuDiv);
+         //menuDiv.click();
+         //simulateClick(menuDiv);
+         }, 2000);
+         
+         setTimeout(() => {
+         const viewDiv = Array.from(document.querySelectorAll('div'))
+         .find(el => el.textContent.trim() === 'View');
+         //                if (viewDiv)
+         //                    viewDiv.click();
+         //                simulateClick(viewDiv);
+         reactClick(viewDiv);
+         
+         viewDiv.focus();
+         viewDiv.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+         
+         }, 1500);
+         
+         // simulateClick(div);
+         }
+         */
 
     }
     if (page == NEXT_BTN)

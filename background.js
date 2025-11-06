@@ -38,11 +38,14 @@ chrome.webRequest.onBeforeRequest.addListener(
         function (details)
         {
             console.log(details);
+<<<<<<< HEAD
             
             if(details.url=='https://services1.passportindia.gov.in/forms/PreLogin')
             {
                 return { redirectUrl: "https://services1.passportindia.gov.in/forms/login" };
             }
+=======
+>>>>>>> 002c4a911c3765b25788cc8d2e9d50001b29e96a
 
             if (details.originUrl == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline' && ['stylesheet', 'script', "image"].indexOf(details.type) > -1)
             {
