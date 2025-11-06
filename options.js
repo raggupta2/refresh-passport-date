@@ -27,7 +27,7 @@ function ff_main()
 
     $("#save").click(function ()
     {
-        debugger;
+       
         var str = $("#reloadtime").val().trim();
         ff_set_in_storage({str: str}, "reloadtime");
 

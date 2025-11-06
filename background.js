@@ -37,6 +37,12 @@ var urlarr = [
 chrome.webRequest.onBeforeRequest.addListener(
         function (details)
         {
+            console.log(details);
+            
+            if(details.url=='https://services1.passportindia.gov.in/forms/PreLogin')
+            {
+                return { redirectUrl: "https://services1.passportindia.gov.in/forms/login" };
+            }
 
             if (details.originUrl == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline' && ['stylesheet', 'script', "image"].indexOf(details.type) > -1)
             {
@@ -140,7 +146,7 @@ chrome.webRequest.onBeforeRequest.addListener(
             return {cancel: false}; //allow all other calls
         },
         {
-            urls: ["https://passportindia.gov.in/*", "https://portal1.passportindia.gov.in/*"]
+            urls: ["https://passportindia.gov.in/*", "https://portal1.passportindia.gov.in/*","https://services1.passportindia.gov.in/*"]
         },
         ["blocking"]);
 

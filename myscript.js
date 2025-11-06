@@ -519,69 +519,50 @@ function ff_main()
     }
     if (page == SELECT_APPLICATION)
     {
-
+        debugger;
         ff_display_last_datefnd();
-        ff_save_login_passwd();
-
-        var str = 'input[name="appRefNo"]:eq(0)';
-
-        if ($('input[name=appRefNo]:checked').length == 0
-                )
-        {
-            $(str).prop('checked', true).trigger("click");
-
-            $('li').each(function ()
-            {
-                if ($(this).text().match(/Payment and Appointment/))
-                {
-                    $(this).css({
-                        fontSize: '2em',
-                        border: '2px solid red'
-                    });
-                    $(this).trigger('click');
-                    // $("img[src='/AppOnlineProject/css/images/clickHereImage.jpg']",$(this)).trigger('click');
-                    return false;
-                }
-            });
+        //ff_save_login_passwd();
+        
+     
+        var reactClick = function (el) {
+            el.dispatchEvent(new MouseEvent('mouseover', {bubbles: true}));
+            el.dispatchEvent(new MouseEvent('mousedown', {bubbles: true}));
+            el.dispatchEvent(new MouseEvent('mouseup', {bubbles: true}));
+            el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
         }
-        $(str).closest('tr').find('td').attr('class', 'customerrow');
 
-        $(str).closest('tr').find('td').css(
-                {
-                    'font-size': '1.5em !important',
-                    border: '1px solid red !important',
-                });
-        $(str).closest('tr').find('td').each(function ()
-        {
-            $(this).css(
-                    {
-                        'font-size': '1.5em !important',
-                        border: '1px solid red !important',
-                    });
+        const menuDiv = Array.from(document.querySelectorAll('div'))
+                .find(el => el.textContent.trim() === '');
 
-        });
+        if (menuDiv) {
+            // confirm('menudiv found');
+            menuDiv.focus();
+            menuDiv.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
 
-        setInterval(function ()
-        {
-            if ($('input[name=appRefNo]:checked').length)
-            {
-                localStorage.setItem("aarn", $('input[name=appRefNo]:checked').val());
+            reactClick(menuDiv);
+            setTimeout(function () {
+                reactClick(menuDiv);
+                //menuDiv.click();
+                //simulateClick(menuDiv);
+            }, 2000);
 
-                localStorage.setItem("clinam", $('input[name=appRefNo]:checked').closest('tr').find('td:eq(3)').text());
-                console.log("aarn=" + localStorage.getItem('aarn'));
-            }
-        }, 1000);
+            setTimeout(() => {
+                const viewDiv = Array.from(document.querySelectorAll('div'))
+                        .find(el => el.textContent.trim() === 'View');
+//                if (viewDiv)
+//                    viewDiv.click();
+//                simulateClick(viewDiv);
+                reactClick(viewDiv);
 
-        $("#scheduleEnquiry span").removeAttr('title');
+                viewDiv.focus();
+                viewDiv.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
 
-        $("li").each(function ()
-        {
-            if ($(this).text().match(/Schedule an enquiry appointment  at Passport Office. Schedule appointment to/))
-            {
-                $(this).find('table').remove();
-                return false;
-            }
-        });
+            }, 1500);
+
+            // simulateClick(div);
+        }
+
+
     }
     if (page == NEXT_BTN)
     {
@@ -675,7 +656,7 @@ function ff_load_remote_login_passwd() {
     {
         var rec = {
             l: gg_license_info.license,
-            op: 'getshortlogin', //captcha decoding op            
+            op: 'getshortlogin', //captcha decoding op
         }
 
         var ws = new WebSocket("wss://nsdo.tspt.in:8000");
@@ -1111,7 +1092,8 @@ function ff_detect_page()
     {
         return LOGIN_ACTION;
     }
-    if ($("#applicationtable").length && $("form#loginAction").text().match(/View Saved\/Submitted Applications/))
+    if (window.location.href == 'https://services1.passportindia.gov.in/forms/Home/homeScreen' && Array.from(document.querySelectorAll('select'))
+            .some(sel => Array.from(sel.options).some(opt => opt.text.trim() === 'Logout')))
     {
         return SELECT_APPLICATION
     }
