@@ -628,7 +628,7 @@ function ff_main()
         debugger;
         ff_display_last_datefnd();
 
-        setTimeout(() => {
+        setInterval(() => {
             console.log('\n\n Debugging:', new Date().toLocaleTimeString());
             ff_find_menu_dots();
             ff_click_view_button();
