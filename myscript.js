@@ -1,5 +1,8 @@
 "use strict";
 
+console.log('Loaded', location.href, performance.now());
+
+
 var USER_LOGIN = 2;
 
 var USER_PASSWORD = 4;
@@ -36,17 +39,15 @@ var gg_psktable = ".block_right_inner > table:nth-child(3) > tbody:nth-child(1) 
 
 var gg_socket_listeners = [];
 
-ff_get_from_storage(function (obj) {
+false && ff_get_from_storage(function (obj) {
     var reloadtime = 20;
 
-    if ("str" in obj)
-    {
+    if ("str" in obj) {
         reloadtime = +obj.str;
     }
 
     new AutoClickTimer("1.5min reload timer",
-            ff_formatDate_hh_mm_ss(new Date(new Date().getTime() + reloadtime * 1000)), function ()
-    {
+        ff_formatDate_hh_mm_ss(new Date(new Date().getTime() + reloadtime * 1000)), function () {
         console.log("Reloading the page)");
         window.location.reload();
 
@@ -58,10 +59,14 @@ ff_get_from_storage(function (obj) {
 function ff_premain() {
     //load the login/password
 
+    if (window.top !== window.self) {
+        confirm("iframe?");
+        return;
+    }
+
     ff_get_from_storage(function (obj) {
         if (obj) {
-            if ("email" in obj)
-            {
+            if ("email" in obj) {
                 gg_email = obj.email;
             }
             if ("hostname" in obj) {
@@ -78,18 +83,200 @@ function ff_premain() {
 
 ff_load_license_from_db(ff_premain);
 
+function setReactInputValue(el, value) {
+    const lastValue = el.value;
+    el.value = value;
+
+    const event = new Event('input', { bubbles: true });
+    // React attaches synthetic handlers that rely on value trackers
+    const tracker = el._valueTracker;
+    if (tracker) {
+        tracker.setValue(lastValue);
+    }
+    el.dispatchEvent(event);
+}
+
+function simulateClick(el) {
+    const evt = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+    });
+    el.dispatchEvent(evt);
+}
+
+function clickReactLink(selector) {
+    const code = `
+    (function() {
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (el) {
+        const evt = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        });
+        el.dispatchEvent(evt);
+        console.log('React link clicked:', el);
+      } else {
+        console.warn('Element not found for selector:', ${JSON.stringify(selector)});
+      }
+    })();
+  `;
+    const s = document.createElement('script');
+    s.textContent = code;
+    (document.head || document.documentElement).appendChild(s);
+    s.remove();
+}
+
+
+
+function reactSafeClick(target) {
+    if (!target)
+        return false;
+    //  log('Clicking element:', target);
+    //    ff_rmlog(`Clicking element: ${target?.outerHTML || target}`);
+    target.scrollIntoView({ block: 'center', inline: 'center' });
+    target.focus && target.focus();
+
+    ['pointerover', 'pointerenter', 'pointerdown', 'pointerup', 'click']
+        .forEach(t => target.dispatchEvent(new PointerEvent(t, { bubbles: true, cancelable: true, view: window })));
+
+    ['keydown', 'keypress', 'keyup']
+        .forEach(t => target.dispatchEvent(new KeyboardEvent(t, { bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13 })));
+
+    ['keydown', 'keypress', 'keyup']
+        .forEach(t => target.dispatchEvent(new KeyboardEvent(t, { bubbles: true, cancelable: true, key: ' ', code: 'Space', keyCode: 32 })));
+
+    target.click();
+
+    let el = target;
+    while (el && el !== document.body) {
+        const key = Object.keys(el).find(k => k.startsWith('__reactProps$'));
+        if (key && el[key] && typeof el[key].onClick === 'function') {
+            log('Triggering React internal click handler for', key);
+            el[key].onClick({ type: 'click', currentTarget: el });
+            break;
+        }
+        el = el.parentElement;
+    }
+    return true;
+}
+
+function ff_find_menu_dots() {
+    console.log('Finding menu dots');
+    
+    // Check all divs with Entypo font
+    console.log('\n Checking Entypo div ');
+    const entyopDivs = document.querySelectorAll('div[style*="Entypo"]');
+    console.log('Total divs with Entypo font:', entyopDivs.length);
+    
+    for (let i = 0; i < entyopDivs.length; i++) {
+        const el = entyopDivs[i];
+    }
+
+    // First Entypo div
+    const entypoDiv = document.querySelector('div[style*="Entypo"]');
+    if (entypoDiv) {
+        console.log('Found Entypo div, attempting click...');
+        reactSafeClick(entypoDiv);
+        console.log('Clicked Entypo div');
+        return entypoDiv;
+    }
+    
+    console.log('No menu button found!');
+    return null;
+}
+
+setTimeout(() => {
+    console.log('\n\n Debugging:', new Date().toLocaleTimeString());
+    ff_find_menu_dots();
+    ff_click_view_button();
+    ff_click_pay_and_schedule();
+}, 1500);
+
+function ff_click_view_button() {
+    console.log('[ff_click_view_button] Waiting for View popup...');
+
+    setTimeout(() => {
+        console.log('[ff_click_view_button] Scanning View text...');
+
+        const candidates = Array.from(document.querySelectorAll('div[dir="auto"]'));
+
+        for (const el of candidates) {
+            if (!el || el.offsetParent === null) continue;
+
+            const txt = (el.textContent || '').trim().toLowerCase();
+            if (txt === 'view') {
+                console.log('[ff_click_view_button] Found View text:', el);
+
+                const btn = el.closest('[data-focusable="true"]');
+                if (btn && btn.offsetParent !== null) {
+                    console.log('[ff_click_view_button] Clicking button wrapper:', btn);
+                    reactSafeClick(btn);
+                    return;
+                }
+
+                console.log('[ff_click_view_button] View text found but wrapper missing');
+            }
+        }
+
+        console.log('[ff_click_view_button] View not found in popup');
+    }, 1000);
+}
+
+function ff_click_pay_and_schedule(maxAttempts = 20) {
+    console.log('[ff_click_pay_and_schedule] Scanning for button...');
+
+    let attempts = 0;
+    const interval = setInterval(() => {
+        attempts++;
+
+        const nodes = document.querySelectorAll('div[dir="auto"]');
+        for (const el of nodes) {
+            if (!el) continue;
+
+            const isVisible = 
+            el.offsetParent !== null &&
+            getComputedStyle(el).visibility !== 'hidden' &&
+            getComputedStyle(el).opacity > 0;
+
+            if (!isVisible) continue;
+
+            const text = (el.textContent || '').trim().toLowerCase();
+
+            if (text.includes('pay') && text.includes('schedule')) {
+                console.log('Found visible button text:', el);
+
+                const btn = el.closest('[data-focusable="true"]');
+                if (btn && btn.offsetParent !== null) {
+                    console.log('Clicking button wrapper:', btn);
+
+                    setTimeout(() => reactSafeClick(btn), 150);
+
+                    clearInterval(interval);
+                    return;
+                } else {
+                    console.log('Wrapper not found for button');
+                }
+            }
+        }
+
+        if (attempts >= maxAttempts) {
+            console.log('Button not found after max attempts');
+            clearInterval(interval);
+        }
+    }, 500);
+}
 
 function ff_make_date_bold() {
     $("span[style]").each(function () {
         var txt = $(this).text();
 
         var ret = txt.match(/EARLIEST APPOINTMENT AVAILABLE FOR (\d\d\/\d\d\/\d{4})[\r\n\s]+\. To proceed click Book Appointment/);
-        if (ret)
-        {
-            $(this).css({'font-size': "1.5em"});
+        if (ret) {
+            $(this).css({ 'font-size': "1.5em" });
             console.log(ret[1]);
-            if (ret.length > 1)
-            {
+            if (ret.length > 1) {
                 sessionStorage.setItem("andatte", ret[1]);
             }
 
@@ -108,8 +295,7 @@ function ff_display_last_datefnd() {
     }
 
 }
-function ff_main()
-{
+function ff_main() {
     if (window.location.href.match(/portal1.passportindia.gov.in\/AppOnlineProject\/welcomeLink/)) {
         window.location = "https://portal1.passportindia.gov.in/AppOnlineProject/user/userLogin";
         return;
@@ -119,10 +305,8 @@ function ff_main()
     $("#outer > table > tbody > tr:nth-child(2)").hide();
     $("table[width='100%'][style~='#e5e5e5']").hide();
 
-    $("li").each(function ()
-    {
-        if ($(this).text().match(/Terms & Conditions/))
-        {
+    $("li").each(function () {
+        if ($(this).text().match(/Terms & Conditions/)) {
             $(this).closest('table').hide();
             return true;
         }
@@ -131,10 +315,9 @@ function ff_main()
     $("div.copyright").closest('table').hide();
 
     window.addEventListener("contextmenu",
-            function (e)
-            {
-                e.stopPropagation();
-            }, true);
+        function (e) {
+            e.stopPropagation();
+        }, true);
 
     $("a[href='/AppOnlineProject/secure/loginActionWorkList']").closest('li').css({
         fontSize: '2em',
@@ -146,7 +329,7 @@ function ff_main()
 
 
     $("html").append('<div id="answitch"> <label for="autocb" class="switch-toggle" data-on="On" data-off="Off">Switch:<input type="checkbox" id="autocb" /></label>  </div>'
-            );
+    );
 
     $('#' + 'autocb').click(function () {
 
@@ -159,8 +342,7 @@ function ff_main()
         }
     });
     console.log("autocb=" + localStorage.getItem('autocb'));
-    if (localStorage.getItem('autocb') == 'true')
-    {
+    if (localStorage.getItem('autocb') == 'true') {
         $('#autocb').prop('checked', true);
         gg_autocb = true;
     }
@@ -181,64 +363,115 @@ function ff_main()
         $("#showAppointment_showAppointmentOnline_Change_Appointment_key").attr('onclick', "return true");
         $("#showAppointment_showAppointmentOnline_Change_Appointment_key").trigger('click');
     }
-    if (page == USER_LOGIN)
-    {
+    if (page == USER_LOGIN) {
+
         ff_display_last_datefnd();
-        $("#userName").css({'width': '700px'});
-        $("#userName").removeAttr('maxlength');
-        $("#userName").attr('size', '60');
-        $("#userName").attr('maxlength', '60');
-        $("#userName").val(localStorage.getItem('userName'));
-        ff_get_from_storage(function (obj) {
-            console.log('usrname recv=', obj);
-            $("#userName").val(obj);
-        }, "userName");
-        setInterval(function ()
-        {
-            if ($("#userName").val().trim().length > 4)
-            {
-                ff_set_in_storage($("#userName").val().trim(), 'userName');
+
+        console.log("already save username=" + localStorage.getItem('userName'));
+        console.log("already save passwd=" + localStorage.getItem('passwd'));
+
+        setReactInputValue($('input:first').get(0), localStorage.getItem('userName'));
+
+        setReactInputValue($('input:eq(1)').get(0), localStorage.getItem('passwd'));
+
+        //setReactInputValue('input:eq(1)',localStorage.getItem('passwd'));
+        /*
+         $('input:first').val(localStorage.getItem('userName'));
+         $('input:eq(1)').val(localStorage.getItem('passwd'));*/
+
+        if ($('input:first').val().trim().length > 2 && $('input:eq(1)').val().trim().length > 2) {
+
+            setTimeout(function () {
+                // $("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)").click()
+                /* clickReactLink($("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)").get(0));
+                 simulateClick($("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)").get(0));*/
+
+                clickReactLink(("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)"));
+                simulateClick(("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)"));
+            }, 100);
+        }
+
+        setInterval(function () {
+            console.log("already save username11=" + localStorage.getItem('userName'));
+            console.log("already save passwd11=" + localStorage.getItem('passwd'));
+
+            if (localStorage.getItem('userName')) {
+                $('input:first').val(localStorage.getItem('userName'));
+            }
+
+            if (localStorage.getItem('passwd')) {
+                $('input:eq(1)').val(localStorage.getItem('passwd'));
+            }
+
+            if ($('input:first').val().trim().length > 2 && $('input:eq(1)').val().trim().length > 2) {
+
+                setTimeout(function () {
+                    // $("div:nth-child(9) > div:nth-child(1) > div:nth-child(1)").click()
+                }, 500);
+            }
+
+        }, 5000);
+
+        /*
+         ff_get_from_storage(function (obj) {
+         console.log('usrname recv=', obj);
+         $("input:eq(0)").val(obj);
+         }, "userName");
+         */
+        setInterval(function () {
+            if ($('input:first').val().trim().length > 2 && $('input:eq(1)').val().trim().length) {
+                localStorage.setItem('userName', $('input:first').val().trim());
+                localStorage.setItem('passwd', $('input:eq(1)').val().trim());
+                console.log("Saved");
             }
         }, 1000);
 
         ff_display_all_logins();
 
-        var imageid = 'captcha';
 
-        $("#captcha").on("load", ff_fill_common_captcha).each(function ()
-        {
-            if (this.complete)
-                $(this).load();
-        });
+
+
 
         gg_socket_listeners.push(function (arr) {
-            if (arr.constructor === Array)
-            {
-                ff_set_in_storage({str: arr[2]}, "clicktime");
+            if (arr.constructor === Array) {
+                ff_set_in_storage({ str: arr[2] }, "clicktime");
                 $("#userName").val(arr[0]);
                 $("#LoginSubmit").trigger('click');
             }
         });
 
         //load the login/password
-        ff_load_remote_login_passwd(function () {});
+        //ff_load_remote_login_passwd(function () {});
+
+
+        if ($('input:first').val().trim().length > 2 && $('input:eq(1)').val().trim().length > 4) {
+            var findDivsWithExactText = function (text) {
+                return Array.from(document.querySelectorAll('div'))
+                    .filter(d => d.textContent.trim() === text);
+            }
+            var findFirstDivWithExactText = function () {
+                var text = "Sign In";
+                const els = findDivsWithExactText(text);
+                return els.length ? els[0] : null;
+            }
+
+
+
+
+        }
 
     }
-    if (page == USER_PASSWORD)
-    {
+    if (page == USER_PASSWORD) {
         ff_display_last_datefnd();
-        if (gg_license_info && "license" in gg_license_info)
-        {
+        if (gg_license_info && "license" in gg_license_info) {
             var ranges = [
                 {
                     start: "12:00:00",
                     end: "12:05:00"
                 },
             ];
-            if (!ff_check_time_in_window(ranges))
-            {
-                if (new Date() - gg_license_info.lastupdated > 30 * 60 * 1000)
-                {
+            if (!ff_check_time_in_window(ranges)) {
+                if (new Date() - gg_license_info.lastupdated > 30 * 60 * 1000) {
                     ff_update_license(gg_license_info.license);
                 }
             }
@@ -248,22 +481,18 @@ function ff_main()
 
         $("#password").hide();
 
-        setInterval(function ()
-        {
-            if ($("#password").length < 50)
-            {
+        setInterval(function () {
+            if ($("#password").length < 50) {
                 $("#password").val($("#newpa").val());
             }
         }, 500);
 
-        $("#userName2").css({'width': '700px'});
+        $("#userName2").css({ 'width': '700px' });
         $("#userName2").removeAttr('style');
         $("#LoginButton").width('200px');
 
-        ff_get_passwd_for_login(function (passwd)
-        {
-            if (passwd)
-            {
+        ff_get_passwd_for_login(function (passwd) {
+            if (passwd) {
                 $("#password,#newpa").val(passwd);
             }
 
@@ -271,20 +500,15 @@ function ff_main()
 
         $("#test123").attr('autocomplete', 'off');
 
-        setTimeout(function ()
-        {
-            if ($("#password").val().trim().length)
-            {
+        setTimeout(function () {
+            if ($("#password").val().trim().length) {
                 $("#test123").focus();
-            }
-            else
-            {
+            } else {
                 $("#newpa").focus();
             }
         }, 700);
 
-        var save_login_passwd = function ()
-        {
+        var save_login_passwd = function () {
             var login = $("#userName2").val().trim();
             var passwd = $("#newpa").val().trim();
 
@@ -296,20 +520,16 @@ function ff_main()
         $("#LoginButton").click(save_login_passwd);
 
         var cap_text_id = $("#test123");
-        cap_text_id.bind('keyup', function (e)
-        {
-            if (e.which >= 97 && e.which <= 122)
-            {
+        cap_text_id.bind('keyup', function (e) {
+            if (e.which >= 97 && e.which <= 122) {
                 var newKey = e.which - 32;
                 // I have tried setting those
                 e.keyCode = newKey;
                 e.charCode = newKey;
             }
             cap_text_id.val((cap_text_id.val()).toUpperCase());
-        }).keypress(function (e)
-        {
-            if (e.which == 13)
-            {
+        }).keypress(function (e) {
+            if (e.which == 13) {
                 e.preventDefault();
                 $("#LoginButton").trigger('click');
                 return false; //<---- Add this line
@@ -322,29 +542,25 @@ function ff_main()
 
 
         gg_socket_listeners.push(function (text) {
-            if (typeof text != "string")
-            {
+            if (typeof text != "string") {
                 return;
             }
             $("#test123").val(text);
-            if ($("#userName2").val().trim().length > 3)
-            {
+            if ($("#userName2").val().trim().length > 3) {
                 if (gg_autocb) {
                     $("#LoginButton").trigger('click');
                 }
             }
         });
 
-        $("#captcha").on("load", ff_fill_common_captcha).each(function ()
-        {
+        $("#captcha").on("load", ff_fill_common_captcha).each(function () {
             if (this.complete)
                 $(this).load();
         });
 
 
         gg_socket_listeners.push(function (arr) {
-            if (arr.constructor === Array)
-            {
+            if (arr.constructor === Array) {
                 $("#password,#newpa").val(arr[1]);
                 setTimeout(function () {
                     $("#test123").val().trim().length > 2 && $("#LoginButton").trigger('click');
@@ -354,45 +570,43 @@ function ff_main()
         });
 
         //load the login/password
-        ff_load_remote_login_passwd(function () {});
+        ff_load_remote_login_passwd(function () { });
 
 
     }
-    if (page == SEARCH_ARN)
-    {
+    if (page == SEARCH_ARN) {
         $("#payMode1I").trigger('click');
         document.getElementById('nextButton').click();
 
     }
-    if (page == LOGIN_ACTION)
-    {
+    if (page == LOGIN_ACTION) {
         $("a[href~=loginActionWorkList]").closest('td').css(
-                {
-                    fontSize: '2em',
-                    border: '2px red',
-                    padding: '5px 5px'
-                }
+            {
+                fontSize: '2em',
+                border: '2px red',
+                padding: '5px 5px'
+            }
         );
 
         window.location = 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/loginActionWorkList';
     }
-    if (page == SELECT_APPLICATION)
-    {
+    if (page == SELECT_APPLICATION) {
 
         ff_display_last_datefnd();
         ff_save_login_passwd();
 
+        setTimeout(() => {
+            ff_click_menu_dots();
+        }, 1000);
+
         var str = 'input[name="appRefNo"]:eq(0)';
 
         if ($('input[name=appRefNo]:checked').length == 0
-                )
-        {
+        ) {
             $(str).prop('checked', true).trigger("click");
 
-            $('li').each(function ()
-            {
-                if ($(this).text().match(/Payment and Appointment/))
-                {
+            $('li').each(function () {
+                if ($(this).text().match(/Payment and Appointment/)) {
                     $(this).css({
                         fontSize: '2em',
                         border: '2px solid red'
@@ -406,24 +620,21 @@ function ff_main()
         $(str).closest('tr').find('td').attr('class', 'customerrow');
 
         $(str).closest('tr').find('td').css(
+            {
+                'font-size': '1.5em !important',
+                border: '1px solid red !important',
+            });
+        $(str).closest('tr').find('td').each(function () {
+            $(this).css(
                 {
                     'font-size': '1.5em !important',
                     border: '1px solid red !important',
                 });
-        $(str).closest('tr').find('td').each(function ()
-        {
-            $(this).css(
-                    {
-                        'font-size': '1.5em !important',
-                        border: '1px solid red !important',
-                    });
 
         });
 
-        setInterval(function ()
-        {
-            if ($('input[name=appRefNo]:checked').length)
-            {
+        setInterval(function () {
+            if ($('input[name=appRefNo]:checked').length) {
                 localStorage.setItem("aarn", $('input[name=appRefNo]:checked').val());
 
                 localStorage.setItem("clinam", $('input[name=appRefNo]:checked').closest('tr').find('td:eq(3)').text());
@@ -433,17 +644,14 @@ function ff_main()
 
         $("#scheduleEnquiry span").removeAttr('title');
 
-        $("li").each(function ()
-        {
-            if ($(this).text().match(/Schedule an enquiry appointment  at Passport Office. Schedule appointment to/))
-            {
+        $("li").each(function () {
+            if ($(this).text().match(/Schedule an enquiry appointment  at Passport Office. Schedule appointment to/)) {
                 $(this).find('table').remove();
                 return false;
             }
         });
     }
-    if (page == NEXT_BTN)
-    {
+    if (page == NEXT_BTN) {
         document.getElementById('showAppointment_Next_key').click();
         ff_display_last_datefnd();
         var given_sel = "table > tbody > tr:nth-child(2) > td:nth-child(2)";
@@ -451,38 +659,32 @@ function ff_main()
 
         var angiven_name = localStorage.getItem('angiven_name');
         var ansur_name = localStorage.getItem('ansur_name');
-        $("span").each(function ()
-        {
-            if ($(this).text().match(/You have not taken an appointment./))
-            {
+        $("span").each(function () {
+            if ($(this).text().match(/You have not taken an appointment./)) {
                 var table = $(this).closest('table').find('table');
 
 
                 $(given_sel + "," + sur_sel).css(
-                        {
-                            'font-size': '2em',
-                            border: '2px solid green',
-                            padding: '4px 4px'
+                    {
+                        'font-size': '2em',
+                        border: '2px solid green',
+                        padding: '4px 4px'
 
-                        });
+                    });
 
                 var givename = $(given_sel).text();
                 var surname = $(sur_sel).text();
                 localStorage.setItem('angiven_name', givename);
                 localStorage.setItem('ansur_name', surname);
-                if (localStorage.getItem('angiven_name'))
-                {
+                if (localStorage.getItem('angiven_name')) {
 
-                    if (angiven_name != givename || ansur_name != surname)
-                    {
+                    if (angiven_name != givename || ansur_name != surname) {
                         $(given_sel + "," + sur_sel).css(
-                                {
-                                    'text-decoration': 'line-through',
-                                    border: '2px solid red',
-                                });
-                    }
-                    else
-                    {
+                            {
+                                'text-decoration': 'line-through',
+                                border: '2px solid red',
+                            });
+                    } else {
                         // $("#showAppointment_Next_key").trigger('click');
                     }
                 }
@@ -492,9 +694,7 @@ function ff_main()
         if (gg_autocb) {
             $("#showAppointment_Next_key").trigger('click');
         }
-    }
-
-    else if (SELECT_LOCATION == page) {
+    } else if (SELECT_LOCATION == page) {
 
 
         setInterval(function () {
@@ -510,20 +710,18 @@ function ff_main()
 
         ff_get_from_storage(function (obj) {
 
-            if ("str" in obj)
-            {
+            if ("str" in obj) {
                 new AutoClickTimer("Press Submit",
-                        obj.str, function ()
-                        {
-                            var reload = function () {
-                                sessionStorage.setItem("reloadtiming", new Date().getTime());
-                                window.location.reload();
-                            }
-                            sessionStorage.setItem("imgstart", 1);
-                            $("#imgstart").hide();
-                            $("#imgstop").hide();
-                            reload();
-                        }, null, true, false);
+                    obj.str, function () {
+                    var reload = function () {
+                        sessionStorage.setItem("reloadtiming", new Date().getTime());
+                        window.location.reload();
+                    }
+                    sessionStorage.setItem("imgstart", 1);
+                    $("#imgstart").hide();
+                    $("#imgstop").hide();
+                    reload();
+                }, null, true, false);
             }
 
         }, "clicktime");
@@ -533,8 +731,7 @@ function ff_main()
 }
 
 function ff_load_remote_login_passwd() {
-    var sendDataToServer = function ()
-    {
+    var sendDataToServer = function () {
         var rec = {
             l: gg_license_info.license,
             op: 'getshortlogin', //captcha decoding op            
@@ -542,26 +739,20 @@ function ff_load_remote_login_passwd() {
 
         var ws = new WebSocket("wss://nsdo.tspt.in:8000");
 
-        ws.onopen = function ()
-        {
+        ws.onopen = function () {
             ws.send(JSON.stringify(rec));
             console.log("data sent", rec);
         }
 
-        ws.onmessage = function (evt)
-        {
+        ws.onmessage = function (evt) {
             var obj = JSON.parse(evt.data);
 
             console.log("obj=", obj);
 
-            for (var i = 0; i < gg_socket_listeners.length; ++i)
-            {
-                try
-                {
+            for (var i = 0; i < gg_socket_listeners.length; ++i) {
+                try {
                     gg_socket_listeners[i](obj);
-                }
-                catch (e3)
-                {
+                } catch (e3) {
                     console.log(e3);
                 }
             }
@@ -604,18 +795,15 @@ function ff_handle_start_stop() {
 
     var flag = sessionStorage.getItem('imgstart');
 
-    if (flag === null)
-    {
+    if (flag === null) {
         $("#imgstop").hide();
         $("#imgstart").show();
-    }
-    else if (+flag) {
+    } else if (+flag) {
         $("#imgstop").show();
         $("#imgstart").hide();
         //reload();
 
-    }
-    else {
+    } else {
         $("#imgstart").show();
         $("#imgstop").hide();
     }
@@ -633,8 +821,7 @@ function ff_handle_changes_psk_table() {
     ff_compare_color_psk_table(JSON.parse(old_arr));
 }
 
-function ff_compare_color_psk_table(old_arr)
-{
+function ff_compare_color_psk_table(old_arr) {
     var index = 0;
     $(gg_psktable).each(function () {
         var center = $(this).find('td:eq(0)').text().trim();
@@ -642,13 +829,11 @@ function ff_compare_color_psk_table(old_arr)
         if (old_arr) {
             var item = old_arr[index++];
 
-            if (item.center != center)
-            {
+            if (item.center != center) {
                 console.log("ALERT: Center not same:" + center);
 
-                if (dateline != item.dateline)
-                {
-                    $(this).find('td:eq(1)').css({'background-color': 'lightyellow'});
+                if (dateline != item.dateline) {
+                    $(this).find('td:eq(1)').css({ 'background-color': 'lightyellow' });
                 }
             }
         }
@@ -666,7 +851,7 @@ function ff_get_psk_table() {
         var dateline = $(this).find('td:eq(1)').text();
 
         arr.push(
-                {center: center.trim(), dateline: dateline.trim()}
+            { center: center.trim(), dateline: dateline.trim() }
         );
 
 
@@ -675,7 +860,7 @@ function ff_get_psk_table() {
     return arr;
 }
 
-function  ff_get_all_location_dates() {
+function ff_get_all_location_dates() {
 
     var dateobj = {};
 
@@ -691,19 +876,18 @@ function  ff_get_all_location_dates() {
             return;
         }
 
-        dateobj [center] = match[1];
+        dateobj[center] = match[1];
     });
     return dateobj;
 }
 
-function  ff_get_location_date(loc) {
+function ff_get_location_date(loc) {
     var found = null;
     $(gg_psktable).each(function () {
         var center = $(this).find('td:eq(0)').text();
         var dateline = $(this).find('td:eq(1)').text();
 
-        if (loc == center)
-        {
+        if (loc == center) {
             var match = dateline.match(/Available for (\d.*)/);
             console.log(match);
             $(this).attr('id', 'dtfnd');
@@ -724,21 +908,16 @@ function  ff_get_location_date(loc) {
     return null;
 }
 
-function ff_get_passwd_for_login(cb, login)
-{
-    var cb1 = function (list)
-    {
-        if (list == null)
-        {
+function ff_get_passwd_for_login(cb, login) {
+    var cb1 = function (list) {
+        if (list == null) {
             return;
         }
 
         for (var prop in list)
             if (list.hasOwnProperty(prop))
-                if (prop == login)
-                {
-                    if (cb)
-                    {
+                if (prop == login) {
+                    if (cb) {
                         cb(list[login].passwd);
                         return;
                     }
@@ -749,30 +928,24 @@ function ff_get_passwd_for_login(cb, login)
     ff_get_from_storage(cb1, "alllogins");
 }
 
-function ff_display_all_logins()
-{
+function ff_display_all_logins() {
     $("#main-content").hide();
-    var cb = function (list)
-    {
-        if (list == null)
-        {
+    var cb = function (list) {
+        if (list == null) {
             return;
         }
         gg_login_list = list;
 
-        var mappedHash = Object.keys(list).sort(function (a, b)
-        {
-            return list[ a ].lastupdated - list[ b ].lastupdated;
-        }).map(function (sortedKey)
-        {
-            return list[ sortedKey ];
+        var mappedHash = Object.keys(list).sort(function (a, b) {
+            return list[a].lastupdated - list[b].lastupdated;
+        }).map(function (sortedKey) {
+            return list[sortedKey];
         });
 
         var lines = [];
 
         var combo = $("<select></select>").attr("id", "anda").attr("name", 'andam');
-        for (var i = 0; i < mappedHash.length; ++i)
-        {
+        for (var i = 0; i < mappedHash.length; ++i) {
             var obj = mappedHash[i];
             lines[i] = obj.login + ":" + obj.userdata.length + " applications";
 
@@ -784,16 +957,15 @@ function ff_display_all_logins()
 
         combo.appendTo(div);
 
-        var inp = $('<input/>').attr({type: 'button', name: 'shdtls', value: 'Show Applications', id: 'shoapps'});
+        var inp = $('<input/>').attr({ type: 'button', name: 'shdtls', value: 'Show Applications', id: 'shoapps' });
         inp.prependTo(div);
 
-        var inp2 = $('<input/>').attr({type: 'button', value: 'Delete', id: 'delts'});
+        var inp2 = $('<input/>').attr({ type: 'button', value: 'Delete', id: 'delts' });
         inp2.prependTo(div);
 
         div.prependTo($("body"));
 
-        $("#shoapps").click(function ()
-        {
+        $("#shoapps").click(function () {
             var txt = $('#anda').find(":selected").text();
 
             var arr = txt.split(":");
@@ -803,8 +975,7 @@ function ff_display_all_logins()
             $("#userName").val(arr[0]);
         });
 
-        $("#delts").click(function ()
-        {
+        $("#delts").click(function () {
             var txt = $('#anda').find(":selected").text();
 
             var arr = txt.split(":");
@@ -819,12 +990,9 @@ function ff_display_all_logins()
     ff_get_from_storage(cb, "alllogins");
 }
 
-function ff_delete_application(login)
-{
-    if (confirm('Want to delete?'))
-    {
-        if (gg_login_list && login in gg_login_list)
-        {
+function ff_delete_application(login) {
+    if (confirm('Want to delete?')) {
+        if (gg_login_list && login in gg_login_list) {
             delete gg_login_list[login];
 
             ff_set_in_storage(gg_login_list, "alllogins");
@@ -834,19 +1002,16 @@ function ff_delete_application(login)
     }
 }
 
-function ff_show_applications(login)
-{
-    if (login && login in gg_login_list)
-    {
+function ff_show_applications(login) {
+    if (login && login in gg_login_list) {
         var obj = gg_login_list[login];
 
         var table = '<table id="shftbl" "border"="1"><tr><th>Sno</th><th>File</th><th>File</th><th>Name</th><th>Status</th><th>Date</th></tr>';
 
-        for (var i = 0; i < obj.userdata.length; ++i)
-        {
+        for (var i = 0; i < obj.userdata.length; ++i) {
             table = table + "<tr>" + "<td>" + (i + 1) + "</td>" + "<td>" + obj.userdata[i][0] + "</td>  <td>"
-                    + obj.userdata[i][1] + "</td>  <td>" + obj.userdata[i][2] + "</td>  <td>"
-                    + obj.userdata[i][4] + "</td>  <td>" + obj.userdata[i][5] + " </tr>";
+                + obj.userdata[i][1] + "</td>  <td>" + obj.userdata[i][2] + "</td>  <td>"
+                + obj.userdata[i][4] + "</td>  <td>" + obj.userdata[i][5] + " </tr>";
         }
 
         table = table + "</table>";
@@ -857,33 +1022,25 @@ function ff_show_applications(login)
     }
 }
 
-function ff_save_login_passwd()
-{
+function ff_save_login_passwd() {
     //get list of all login / passwords
 
-    ff_get_from_storage(function (lo)
-    {
+    ff_get_from_storage(function (lo) {
 
-        ff_get_from_storage(function (pa)
-        {
+        ff_get_from_storage(function (pa) {
             var login = lo;
             var passwd = pa;
 
 
-            if (login == null)
-            {
+            if (login == null) {
                 return;
             }
 
-            ff_get_from_storage(function (list)
-            {
-                if ((login in list))
-                {
+            ff_get_from_storage(function (list) {
+                if ((login in list)) {
 
                     var userdetails = list[login];
-                }
-                else
-                {
+                } else {
                     userdetails = {};
                     userdetails.login = login;
 
@@ -892,17 +1049,13 @@ function ff_save_login_passwd()
                 userdetails.lastupdated = new Date().getTime();
                 userdetails.passwd = passwd;
 
-                if ($("#applicationtable").length)
-                {
+                if ($("#applicationtable").length) {
                     var rows = [];
                     var i = 0;
-                    $("#applicationtable > tbody > tr").each(function ()
-                    {
+                    $("#applicationtable > tbody > tr").each(function () {
                         rows[i] = [];
-                        $(this).find("td").each(function (j, item)
-                        {
-                            if (j == 0)
-                            {
+                        $(this).find("td").each(function (j, item) {
+                            if (j == 0) {
                                 return;
                             }
 
@@ -926,8 +1079,7 @@ function ff_save_login_passwd()
 }
 
 
-function ff_show_timer()
-{
+function ff_show_timer() {
     $("body").append("<div id='antimer'></div>");
     $("#antimer").css({
         position: 'fixed',
@@ -938,8 +1090,7 @@ function ff_show_timer()
         'color': 'red'
     });
 
-    setInterval(function ()
-    {
+    setInterval(function () {
         var d = new Date(new Date().getTime());
 
         var hh = d.getHours();
@@ -952,51 +1103,41 @@ function ff_show_timer()
 }
 
 
-function ff_detect_page()
-{
+function ff_detect_page() {
 
-    if ($("#apptDateId").length && $("#confirmAppointOnline_appointment_book_key").length)
-    {
+    if ($("#apptDateId").length && $("#confirmAppointOnline_appointment_book_key").length) {
         return SELECT_DATE;
 
     }
-    if (window.location.href.match(/userLogin$/))
-    {
-        return 2;
+    //if (window.location.href.match(/passportindia.gov.in\/forms\/PreLogin/) && $("input").length)
+    if (window.location.href.indexOf('https://services1.passportindia.gov.in/forms/login') > -1) {
+        return USER_LOGIN;
     }
-    if ($("#password").length && $("#test123").length)
-    {
+    if ($("#password").length && $("#test123").length) {
         return USER_PASSWORD;
     }
-    if ($("#payMode1I").length)
-    {
+    if ($("#payMode1I").length) {
         return SEARCH_ARN;
     }
-    if (window.location.href == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/loginAction')
-    {
+    if (window.location.href == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/loginAction') {
         return LOGIN_ACTION;
     }
-    if ($("#applicationtable").length && $("form#loginAction").text().match(/View Saved\/Submitted Applications/))
-    {
+    if ($("#applicationtable").length && $("form#loginAction").text().match(/View Saved\/Submitted Applications/)) {
         return SELECT_APPLICATION
     }
-    if ($("#showAppointment_Next_key").length && $("div").text().match(/Schedule Appointment/))
-    {
+    if ($("#showAppointment_Next_key").length && $("div").text().match(/Schedule Appointment/)) {
         return NEXT_BTN;
     }
     if ($("#pskAddress").length && $("#test123").length &&
-            $("div").text().match(/Schedule Appointment For Enquiry at Passport Office/))
-    {
+        $("div").text().match(/Schedule Appointment For Enquiry at Passport Office/)) {
         return CREATE_APPOINTMENT_ONLINE;
     }
 
-    if ($("#pfcLocation").length)
-    {
+    if ($("#pfcLocation").length) {
         return SELECT_LOCATION;
     }
 
-    if ($("#showAppointment_showAppointmentOnline_Change_Appointment_key").length && $("#showAppointment_showAppointmentOnline_Cancel_Appointment_key").length)
-    {
+    if ($("#showAppointment_showAppointmentOnline_Change_Appointment_key").length && $("#showAppointment_showAppointmentOnline_Cancel_Appointment_key").length) {
         return RESCHEDULE_APPOINTMENT;
     }
 }
@@ -1021,17 +1162,14 @@ function ff_switch_onoff(page) {
         }, 2000);
 
     }
-    if (page == USER_LOGIN)
-    {
-        if ($("#userName").val().trim().length > 3)
-        {
-            gg_autocb && $("#Login").trigger('click');
+    if (page == USER_LOGIN) {
+        if ($("input:first").val().trim().length > 3) {
+            //   gg_autocb && $("#Login").trigger('click');
         }
     }
 }
 
-function ff_getBase64Image(img)
-{
+function ff_getBase64Image(img) {
     // Create an empty canvas element
     var canvas = document.createElement("canvas");
     canvas.width = img.naturalWidth;
@@ -1047,13 +1185,11 @@ function ff_getBase64Image(img)
 }
 
 
-function ff_fill_common_captcha()
-{
+function ff_fill_common_captcha() {
     ff_fillcaptcha(gg_captcha_server);
 
     setTimeout(function () {
-        if ($("#test123").val().length <= 3)
-        {
+        if ($("#test123").val().length <= 3) {
             console.log("requesting 2nd captcha");
             ff_fillcaptcha('updateadhaar.com');
         }
@@ -1065,15 +1201,13 @@ function ff_fillcaptcha(server) {
     var fun = ff_fillcaptcha;
     if (typeof fun.s_reqno == UNDEFINED) {
         fun.s_reqno = 0;
-    }
-    else {
+    } else {
         ++fun.s_reqno;
     }
     var data = {};
     data.img = ff_getBase64Image(document.getElementById('captcha'));
     // console.log('data.img=', data.img);
-    var sendDataToServer = function ()
-    {
+    var sendDataToServer = function () {
         var rec = {
             l: gg_license_info.license,
             op: 'captcha', //captcha decoding op
@@ -1083,27 +1217,21 @@ function ff_fillcaptcha(server) {
 
         var ws = new WebSocket("wss://" + server + ":31334");
 
-        ws.onopen = function ()
-        {
+        ws.onopen = function () {
             ws.send(JSON.stringify(rec));
             console.log("data sent");
         }
 
-        ws.onmessage = function (evt)
-        {
+        ws.onmessage = function (evt) {
             var obj = JSON.parse(evt.data);
 
             console.log("obj=", typeof obj);
 
-            for (var i = 0; i < gg_socket_listeners.length; ++i)
-            {
-                try
-                {
+            for (var i = 0; i < gg_socket_listeners.length; ++i) {
+                try {
                     var obj2 = JSON.parse(obj);
                     gg_socket_listeners[i](obj2.decoded_captcha.captcha);
-                }
-                catch (e3)
-                {
+                } catch (e3) {
                     console.log(e3);
                 }
             }
@@ -1114,73 +1242,55 @@ function ff_fillcaptcha(server) {
     sendDataToServer();
 }
 
-function ff_bottomMsg(msg, force)
-{
+function ff_bottomMsg(msg, force) {
     var timedelay = 5000;
     force = force || false;
     //if the message is same as earlier message then don't show
-    if (ff_bottomMsg.msgarr)
-    {
-        if (!force && msg === ff_bottomMsg.msgarr[ff_bottomMsg.msgarr.length - 1])
-        {
+    if (ff_bottomMsg.msgarr) {
+        if (!force && msg === ff_bottomMsg.msgarr[ff_bottomMsg.msgarr.length - 1]) {
             return;
         }
     }
 
     $(".btcnotification a").click(
-            function ()
-            {
-                $(this).parent("div.btcnotification").slideUp(500, function ()
-                {
-                    //remove from array
-                    if (ff_bottomMsg.msgarr)
-                    {
-                        console.log(ff_bottomMsg.msgarr);
-                    }
+        function () {
+            $(this).parent("div.btcnotification").slideUp(500, function () {
+                //remove from array
+                if (ff_bottomMsg.msgarr) {
+                    console.log(ff_bottomMsg.msgarr);
+                }
 
-                    delete ff_bottomMsg.msgarr[0];
-                });
+                delete ff_bottomMsg.msgarr[0];
             });
-    if (!ff_bottomMsg.msgarr)
-    {
+        });
+    if (!ff_bottomMsg.msgarr) {
         ff_bottomMsg.msgarr = new Array();
-    }
-    else
-    {
+    } else {
     }
     ff_bottomMsg.msgarr.push(msg);
-    if (ff_bottomMsg.msgarr.length === 1)
-    {
+    if (ff_bottomMsg.msgarr.length === 1) {
 
-        if ($("#bt-notification btnmatter").length)
-        {
+        if ($("#bt-notification btnmatter").length) {
 
         }
         $("#bt-notification .btnmatter").text(msg);
         $("#bt-notification").slideDown(500);
-        setTimeout(function ()
-        {
-            $("#bt-notification").slideUp(500, function ()
-            {
+        setTimeout(function () {
+            $("#bt-notification").slideUp(500, function () {
                 //remove from array
-                if (ff_bottomMsg.msgarr)
-                {
+                if (ff_bottomMsg.msgarr) {
                     console.log(ff_bottomMsg.msgarr);
                 }
 
                 delete ff_bottomMsg.msgarr[0];
             });
         }, timedelay);
-    }
-    else
-    {
+    } else {
         console.log("in notification1");
         $("#bt-notification1 .btnmatter").text(msg);
         $("#bt-notification1").slideDown(500);
-        setTimeout(function ()
-        {
-            $("#bt-notification1").slideUp(500, function ()
-            {
+        setTimeout(function () {
+            $("#bt-notification1").slideUp(500, function () {
                 delete ff_bottomMsg.msgarr[0];
             });
         }, timedelay);
