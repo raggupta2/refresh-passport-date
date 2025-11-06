@@ -52,13 +52,12 @@ gg_port1.onMessage.addListener(function (response)
     }
 });
 
-if ($(gg_psktable1).length) {
+if ($("body").text().match(/Appointment Availability/)) {
     ff_main1();
-}
-else {
+} else {
     var sid = setInterval(function () {
         //console.log("Looping111");
-        if ($(gg_psktable1).length > 0) {
+        if ($("body").text().match(/Appointment Availability/)) {
             console.log("osktable greater than eq 0");
 
             clearInterval(sid);
@@ -66,8 +65,7 @@ else {
             ff_main1();
 
 
-        }
-        else {
+        } else {
             // console.log("osktable less than eq 0");
         }
 
@@ -116,8 +114,7 @@ function ff_main1()
 
                 reload();
             }
-        }
-        else {
+        } else {
             console.log("b11111");
         }
 
@@ -270,8 +267,7 @@ function ff_bottomMsg(msg, force)
     if (!ff_bottomMsg.msgarr)
     {
         ff_bottomMsg.msgarr = new Array();
-    }
-    else
+    } else
     {
     }
     ff_bottomMsg.msgarr.push(msg);
@@ -297,8 +293,7 @@ function ff_bottomMsg(msg, force)
                 delete ff_bottomMsg.msgarr[0];
             });
         }, timedelay);
-    }
-    else
+    } else
     {
         console.log("in notification1");
         $("#bt-notification1 .btnmatter").text(msg);
@@ -314,5 +309,5 @@ function ff_bottomMsg(msg, force)
 }
 
 function ff_get_correct_time() {
-    return new Date(new Date().getTime() );
+    return new Date(new Date().getTime());
 }
