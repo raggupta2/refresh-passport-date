@@ -288,8 +288,6 @@ function ff_make_date_bold() {
             {
                 sessionStorage.setItem("andatte", ret[1]);
             }
-
-
         }
     });
 }
@@ -300,7 +298,6 @@ function ff_display_last_datefnd() {
 
     if (dt) {
         $("body").append('<div id="andatte"><strong>' + dt + '</strong></div>');
-
     }
 
 }
@@ -625,14 +622,17 @@ function ff_main()
     }
     if (page == SELECT_APPLICATION)
     {
-        debugger;
+
         ff_display_last_datefnd();
 
         setInterval(() => {
-            console.log('\n\n Debugging:', new Date().toLocaleTimeString());
-            ff_find_menu_dots();
-            ff_click_view_button();
-            ff_click_pay_and_schedule();
+
+            if (window.location.href != 'https://services1.passportindia.gov.in/forms/Home/ScheduleAppointment') {
+                console.log('\n\n Debugging:', new Date().toLocaleTimeString());
+                ff_find_menu_dots();
+                ff_click_view_button();
+                ff_click_pay_and_schedule();
+            }
         }, 1500);
         //ff_save_login_passwd();
 
@@ -1277,70 +1277,6 @@ function ff_getBase64Image(img)
 }
 
 
-function ff_fill_common_captcha()
-{
-    ff_fillcaptcha(gg_captcha_server);
-
-    setTimeout(function () {
-        if ($("#test123").val().length <= 3)
-        {
-            console.log("requesting 2nd captcha");
-            ff_fillcaptcha('updateadhaar.com');
-        }
-    }, 1000);
-}
-
-function ff_fillcaptcha(server) {
-
-    var fun = ff_fillcaptcha;
-    if (typeof fun.s_reqno == UNDEFINED) {
-        fun.s_reqno = 0;
-    } else {
-        ++fun.s_reqno;
-    }
-    var data = {};
-    data.img = ff_getBase64Image(document.getElementById('captcha'));
-    // console.log('data.img=', data.img);
-    var sendDataToServer = function ()
-    {
-        var rec = {
-            l: gg_license_info.license,
-            op: 'captcha', //captcha decoding op
-            img: data.img,
-            s_reqno: fun.s_reqno,
-        }
-
-        var ws = new WebSocket("wss://" + server + ":31334");
-
-        ws.onopen = function ()
-        {
-            ws.send(JSON.stringify(rec));
-            console.log("data sent");
-        }
-
-        ws.onmessage = function (evt)
-        {
-            var obj = JSON.parse(evt.data);
-
-            console.log("obj=", typeof obj);
-
-            for (var i = 0; i < gg_socket_listeners.length; ++i)
-            {
-                try
-                {
-                    var obj2 = JSON.parse(obj);
-                    gg_socket_listeners[i](obj2.decoded_captcha.captcha);
-                } catch (e3)
-                {
-                    console.log(e3);
-                }
-            }
-
-        }
-    }
-
-    sendDataToServer();
-}
 
 function ff_bottomMsg(msg, force)
 {

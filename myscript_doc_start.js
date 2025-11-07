@@ -73,11 +73,25 @@ if ($("body").text().match(/Appointment Availability/)) {
 }
 
 
-function ff_main1()
+function    ff_main1()
 {
     var page = ff_detect_page1();
     console.log("a0000");
-    if (SELECT_LOCATION == page) {
+    // if (SELECT_LOCATION == page)
+    {
+        const divs = document.querySelectorAll('div');
+        const withScroll = Array.from(divs).filter(el =>
+            el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth
+        );
+      
+        
+        $("div[style*='color: rgb(25, 25, 25);']",withScroll[0]).each(function(){
+            console.log($(this).text());
+            console.log('');
+        });
+
+
+
 
         //ff_handle_changes_psk_table();
 
