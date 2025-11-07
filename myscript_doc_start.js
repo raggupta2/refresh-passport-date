@@ -73,66 +73,51 @@ if ($("body").text().match(/Appointment Availability/)) {
 }
 
 
+
+
 function    ff_main1()
 {
     var page = ff_detect_page1();
     console.log("a0000");
-    // if (SELECT_LOCATION == page)
+
+    var obj = ff_get_all_location_dates1();
+
+    var timing = sessionStorage.getItem('reloadtiming');
+    if (timing != null)
     {
-        const divs = document.querySelectorAll('div');
-        const withScroll = Array.from(divs).filter(el =>
-            el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth
-        );
-      
-        
-        $("div[style*='color: rgb(25, 25, 25);']",withScroll[0]).each(function(){
-            console.log($(this).text());
-            console.log('');
-        });
+        console.log("a1114");
+        console.log("Time difference=" + (new Date() - sessionStorage.getItem('reloadtiming')));
 
+        var data = {
+            l: '7702020220',
+            obj: obj,
+            op: 'sndpskdata',
+            time: sessionStorage.getItem('reloadtiming')
+        };
+        console.log(data);
+        console.log("sended data");
+        //obj != null && gg_port1.postMessage(data);
+        if (obj) {
+            gg_port1.postMessage(data);
+        }
+        console.log(obj);
 
-
-
-        //ff_handle_changes_psk_table();
-
-        var obj = ff_get_all_location_dates1();
-
-        var timing = sessionStorage.getItem('reloadtiming');
-        if (timing != null)
-        {
-            console.log("a1114");
-            console.log("Time difference=" + (new Date() - sessionStorage.getItem('reloadtiming')));
-
-            var data = {
-                l: '7702020220',
-                obj: obj,
-                op: 'sndpskdata',
-                time: sessionStorage.getItem('reloadtiming')
-            };
-            console.log(data);
-            console.log("sended data");
-            //obj != null && gg_port1.postMessage(data);
-            if (obj) {
-                gg_port1.postMessage(data);
-            }
-            console.log(obj);
-
-            var reload = function () {
-                sessionStorage.setItem("reloadtiming", new Date().getTime());
-                window.location.reload();
-            }
-
-            var flag = sessionStorage.getItem('imgstart');
-
-            if (+flag) {
-
-                reload();
-            }
-        } else {
-            console.log("b11111");
+        var reload = function () {
+            sessionStorage.setItem("reloadtiming", new Date().getTime());
+            window.location.reload();
         }
 
+        var flag = sessionStorage.getItem('imgstart');
+
+        if (+flag) {
+
+            reload();
+        }
+    } else {
+        console.log("b11111");
     }
+
+
 
 }
 
@@ -194,52 +179,50 @@ function ff_get_psk_table() {
 
 function  ff_get_all_location_dates1() {
 
-    var dateobj = {};
 
-    $(gg_psktable1).each(function () {
-        var center = $(this).find('td:eq(0)').text();
-        var dateline = $(this).find('td:eq(1)').text();
-        var match = dateline.match(/Available for (\d.*)/);
+    var divs = document.querySelectorAll('div');
+    var withScroll = Array.from(divs).filter(el =>
+        el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth
+    );
 
-        console.log(match);
-        $(this).attr('id', 'dtfnd');
-        if (match == null || match.length < 2) {
-            console.log("PSK table date not read for" + dateline);
+    var items = [];
+
+    $("div[dir='auto']", withScroll[0]).each(function () {
+
+        var txt = $(this).text();
+        if (txt.match(/Appointment/))
+        {
             return;
         }
+        items.push(txt);
 
-        dateobj [center] = match[1];
+        console.log($(this).text());
+        console.log('');
     });
-    return dateobj;
-}
 
-function  ff_get_location_date(loc) {
-    var found = null;
-    $(gg_psktable1).each(function () {
-        var center = $(this).find('td:eq(0)').text();
-        var dateline = $(this).find('td:eq(1)').text();
+    var availability_arr = {};
 
-        if (loc == center)
-        {
-            var match = dateline.match(/Available for (\d.*)/);
-            console.log(match);
-            $(this).attr('id', 'dtfnd');
-            if (match == null || match.length < 2) {
-                console.log("PSK table date not read");
-                return false;
-            }
-            found = match[1];
+    for (var i = 0; i < items.length; i += 2)
+    {
 
-            return false;
+
+        var availableTxt = items[i + 1];
+
+        const match = availableTxt.match(/\b\d{2}-\d{2}-\d{4}\b/);
+        const date = match ? match[0] : null;
+
+        if (date == null) {
+            continue;
+        } else {
+            availability_arr[items[i]] = date;
         }
-
-
-    });
-    if (found) {
-        return found;
     }
-    return null;
+
+    console.log("Availability", availability_arr);
+
+    return availability_arr;
 }
+
 
 
 function ff_detect_page1()
