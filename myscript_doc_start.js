@@ -20,6 +20,8 @@ var SELECT_LOCATION = 512;
 
 var RESCHEDULE_APPOINTMENT = 1024;
 
+var SCHEDULE_APPOINTMENT = 2048;
+
 var gg_login_list = null;
 
 var gg_autocb = false; //is it on or off
@@ -78,12 +80,13 @@ if ($("body").text().match(/Appointment Availability/)) {
 function    ff_main1()
 {
     var page = ff_detect_page1();
-    console.log("a0000");
+   
 
     var obj = ff_get_all_location_dates1();
 
     var timing = sessionStorage.getItem('reloadtiming');
-    if (timing != null)
+   
+   // if (timing != null)
     {
         console.log("a1114");
         console.log("Time difference=" + (new Date() - sessionStorage.getItem('reloadtiming')));
@@ -94,7 +97,7 @@ function    ff_main1()
             op: 'sndpskdata',
             time: sessionStorage.getItem('reloadtiming')
         };
-        console.log(data);
+       
         console.log("sended data");
         //obj != null && gg_port1.postMessage(data);
         if (obj) {
@@ -104,24 +107,19 @@ function    ff_main1()
 
         var reload = function () {
             sessionStorage.setItem("reloadtiming", new Date().getTime());
+            
+            console.log("sss settime="+new Date().getTime());
+            
             window.location.reload();
         }
 
-        var flag = sessionStorage.getItem('imgstart');
-
-        if (+flag) {
-
+      
+        if (localStorage.getItem("autocb") == 'true') {
             reload();
         }
-    } else {
-        console.log("b11111");
     }
 
-
-
 }
-
-
 
 function ff_handle_changes_psk_table() {
 
@@ -156,11 +154,9 @@ function ff_compare_color_psk_table(old_arr)
         }
 
     });
-
 }
 
 function ff_get_psk_table() {
-
 
     var arr = [];
     $(gg_psktable1).each(function () {
@@ -178,7 +174,6 @@ function ff_get_psk_table() {
 }
 
 function  ff_get_all_location_dates1() {
-
 
     var divs = document.querySelectorAll('div');
     var withScroll = Array.from(divs).filter(el =>
@@ -224,15 +219,17 @@ function  ff_get_all_location_dates1() {
 }
 
 
-
 function ff_detect_page1()
 {
     if (window.location.href == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline')
     {
         return SELECT_LOCATION;
     }
+    if (window.location.href == 'https://services1.passportindia.gov.in/forms/Home/ScheduleAppointment')
+    {
+        return SCHEDULE_APPOINTMENT;
+    }
 }
-
 
 function ff_bottomMsg(msg, force)
 {
