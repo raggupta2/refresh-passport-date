@@ -88,7 +88,7 @@ function    ff_main1()
    
    // if (timing != null)
     {
-        console.log("a1114");
+       
         console.log("Time difference=" + (new Date() - sessionStorage.getItem('reloadtiming')));
 
         var data = {
@@ -107,9 +107,6 @@ function    ff_main1()
 
         var reload = function () {
             sessionStorage.setItem("reloadtiming", new Date().getTime());
-            
-            console.log("sss settime="+new Date().getTime());
-            
             window.location.reload();
         }
 

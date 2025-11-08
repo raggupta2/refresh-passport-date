@@ -51,15 +51,28 @@ ff_get_from_storage(function (obj) {
     if ("str" in obj)
     {
         reloadtime = +obj.str;
-
-
     }
 
     new AutoClickTimer("1.5min reload timer",
             ff_formatDate_hh_mm_ss(new Date(new Date().getTime() + reloadtime * 1000)), function ()
     {
         console.log("Reloading the page)");
-        window.location.reload();
+
+        var hh = pad(new Date().getHours());
+        var ranges = [
+            {
+                start: hh + ":48:20",
+                end: hh + ":50:15"
+            },
+            {
+                start: hh + ":28:20",
+                end: hh + ":29:15"
+            },
+        ];
+
+        console.log("ranges2=", ranges);
+        if (!ff_check_time_in_window(ranges))
+            window.location.reload();
 
     }, null, true, true);
 
@@ -305,12 +318,57 @@ function ff_display_last_datefnd() {
     }
 
 }
+
+
+
+function ff_getnext_autoclick_time() {
+
+    var clicktime = null;
+
+    var hh = new Date().getHours();
+    var mm = new Date().getMinutes();
+
+    if (mm > 45 && mm <= 59)
+    {
+        clicktime = pad(hh) + ":59" + ":" + "00";
+    } else
+    if (mm > 15 && mm <= 29)
+    {
+        clicktime = pad(hh) + ":29" + ":" + "00";
+    } else {
+        clicktime = pad(hh) + ":00" + ":" + "00";
+    }
+
+    return clicktime;
+}
 function ff_main()
 {
-    if (window.location.href.match(/portal1.passportindia.gov.in\/AppOnlineProject\/welcomeLink/)) {
-        window.location = "https://portal1.passportindia.gov.in/AppOnlineProject/user/userLogin";
-        return;
+    if (localStorage.getItem("autocb") != 'true') {
+        var sid = setInterval(function () {
+            //console.log("Looping111");
+            if ($("body").text().match(/Appointment Availability/) && window.location.href == 'https://services1.passportindia.gov.in/forms/Home/ScheduleAppointment') {
+                console.log("osktable greater than eq 0");
+
+                clearInterval(sid);
+
+                new AutoClickTimer("Refresh Start",
+                        ff_getnext_autoclick_time(), function ()
+                {
+                    $("#autocb").trigger('click');
+
+                }, null, true, true);
+
+
+            } else {
+                // console.log("osktable less than eq 0");
+            }
+
+        }, 50);
     }
+
+
+
+
 
     $("body").append("<div id='bt-notification1' class='btcnotification'><a href='#'>Close</a><span class='btnmatter'></span></div><div id='bt-notification' class='btcnotification'><a href='#'>Close</a><span class='btnmatter'></span></div>");
     $("#outer > table > tbody > tr:nth-child(2)").hide();
