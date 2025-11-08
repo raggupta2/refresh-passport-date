@@ -27,6 +27,8 @@ var SELECT_LOCATION = 512;
 
 var RESCHEDULE_APPOINTMENT = 1024;
 
+var SCHEDULE_APPOINTMENT = 2048;
+
 var gg_login_list = null;
 
 var gg_autocb = false; //is it on or off
@@ -43,12 +45,14 @@ var gg_psktable = ".block_right_inner > table:nth-child(3) > tbody:nth-child(1) 
 
 var gg_socket_listeners = [];
 
-false && ff_get_from_storage(function (obj) {
+ff_get_from_storage(function (obj) {
     var reloadtime = 20;
 
     if ("str" in obj)
     {
         reloadtime = +obj.str;
+
+
     }
 
     new AutoClickTimer("1.5min reload timer",
@@ -347,8 +351,13 @@ function ff_main()
 
         localStorage.setItem("autocb", gg_autocb);
 
-        if (gg_autocb) {
-            ff_switch_onoff(page);
+        if (gg_autocb)
+        {
+            if (window.location.href == 'https://services1.passportindia.gov.in/forms/Home/ScheduleAppointment') {
+
+                window.location.reload();
+
+            }
         }
     });
     console.log("autocb=" + localStorage.getItem('autocb'));
@@ -362,9 +371,6 @@ function ff_main()
 
     var page = ff_detect_page();
 
-    setTimeout(function () {
-        ff_switch_onoff(page);
-    }, 750);
 
     console.log("page=", page);
 
@@ -729,12 +735,7 @@ function ff_main()
     } else if (SELECT_LOCATION == page) {
 
 
-        setInterval(function () {
-            if ($('#pfcLocation').length && $('#pfcLocation').find(":selected").val() && $('#pfcLocation').find(":selected").val().trim().length) {
-                localStorage.setItem('anpfclocation', $('#pfcLocation').find(":selected").val());
-                console.log("anpfclo=" + localStorage.getItem('anpfclocation', $('#pfcLocation')));
-            }
-        }, 1000);
+
 
         ff_handle_changes_psk_table();
 
@@ -807,8 +808,8 @@ function ff_load_remote_login_passwd() {
 
 function ff_handle_start_stop() {
     if ($("#imgstart").length == 0) {
-        $("<img id='imgstart' src='" + chrome.runtime.getURL('images/start1.jpeg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
-        $("<img id='imgstop' src='" + chrome.runtime.getURL('images/stop1.jpg') + "' >").insertAfter('#showSlotsByLocation_Next_key');
+        $("<img id='imgstart' src='" + chrome.runtime.getURL('images/start.jpeg') + "' >").insertAfter('select:eq(0)');
+        $("<img id='imgstop' src='" + chrome.runtime.getURL('images/sto1.jpg') + "' >").insertAfter('select:eq(0)');
     }
     var reload = function () {
         sessionStorage.setItem("reloadtiming", new Date().getTime());
@@ -1183,6 +1184,10 @@ function ff_show_timer()
 function ff_detect_page()
 {
 
+    if (window.location.href == 'https://services1.passportindia.gov.in/forms/Home/ScheduleAppointment')
+    {
+        return SCHEDULE_APPOINTMENT;
+    }
     if ($("#apptDateId").length && $("#confirmAppointOnline_appointment_book_key").length)
     {
         return SELECT_DATE;
@@ -1233,31 +1238,8 @@ function ff_detect_page()
 
 function ff_switch_onoff(page) {
 
-    if (page == SELECT_APPLICATION) {
 
 
-        /*$("img[src='/AppOnlineProject/css/images/clickHereImage.jpg']").get(1).click();*/
-        ff_do_embed_code(function () {
-
-            window.chedoubleclick = false;
-        });
-
-        setTimeout(function () {
-            // document.getElementById('manageAppointment').click();
-
-            // $("#manageAppointment").trigger('click');
-
-            document.getElementById('manageAppointment').click()
-        }, 2000);
-
-    }
-    if (page == USER_LOGIN)
-    {
-        if ($("input:first").val().trim().length > 3)
-        {
-            //   gg_autocb && $("#Login").trigger('click');
-        }
-    }
 }
 
 function ff_getBase64Image(img)
