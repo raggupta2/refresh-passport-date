@@ -37,28 +37,36 @@ var urlarr = [
 
 
 chrome.webRequest.onBeforeRequest.addListener(
-  (d) => d.type === "script" ? { cancel: true } : {},
-  { urls: ["*://www.gststic.com/*","*://www.google.com/*","*://cdnjs.cloudflare.com/*"] },
-  ["blocking"]
-);
+        function (d) {
+            if (d.type === "script") {
+                return {cancel: true};
+            } else {
+                return {};
+            }
+        },
+        {urls: [
+        //"*://www.gststic.com/*",
+        /*"*://www.google.com/*",*/
+        "*://cdnjs.cloudflare.com/*"
+        ]},
+        ["blocking"]
+        );
 
 chrome.webRequest.onBeforeRequest.addListener(
         function (details)
         {
             console.log(details);
 
-            
-            if(details.url=='https://services1.passportindia.gov.in/forms/PreLogin')
-            {
-                return { redirectUrl: "https://services1.passportindia.gov.in/forms/login" };
-            }
-            if(details.url)
 
-
-            if (details.originUrl == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline' && ['stylesheet', 'script', "image"].indexOf(details.type) > -1)
+            if (details.url == 'https://services1.passportindia.gov.in/forms/PreLogin')
             {
-                return {cancel: true};
+                return {redirectUrl: "https://services1.passportindia.gov.in/forms/login"};
             }
+            if (details.url)
+                if (details.originUrl == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/createAppointOnline' && ['stylesheet', 'script', "image"].indexOf(details.type) > -1)
+                {
+                    return {cancel: true};
+                }
             if (details.url == 'https://portal1.passportindia.gov.in/AppOnlineProject/secure/bookAppointOnline' && details.type == "main_frame")
             {
                 ff_get_from_storage(function (obj) {
@@ -157,7 +165,7 @@ chrome.webRequest.onBeforeRequest.addListener(
             return {cancel: false}; //allow all other calls
         },
         {
-            urls: ["https://passportindia.gov.in/*", "https://portal1.passportindia.gov.in/*","https://services1.passportindia.gov.in/*"]
+            urls: ["https://passportindia.gov.in/*", "https://portal1.passportindia.gov.in/*", "https://services1.passportindia.gov.in/*"]
         },
         ["blocking"]);
 

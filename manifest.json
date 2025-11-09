@@ -1,7 +1,7 @@
 {
     "name": "Passport Reload changes Short dt",
     "description": "Refresh with doc_start",
-    "version": "3.0",
+    "version": "3.1",
     "manifest_version": 2,
 
     "permissions": [
