@@ -186,36 +186,39 @@ function reactSafeClick(target) {
     return true;
 }
 
-function ff_find_menu_dots() {
+function ff_find_menu_dots(maxAttempts = 20, intervalMs = 500, callback) {
     console.log('Finding menu dots');
 
-    // Check all divs with Entypo font
-    console.log('\n Checking Entypo div ');
-    const entyopDivs = document.querySelectorAll('div[style*="Entypo"]');
-    console.log('Total divs with Entypo font:', entyopDivs.length);
+    let attempts = 0;
+    const interval = setInterval(() => {
+        attempts++;
 
-    for (let i = 0; i < entyopDivs.length; i++) {
-        const el = entyopDivs[i];
-    }
+        const entypoDiv = document.querySelector('div[style*="Entypo"]');
+        if (entypoDiv) {
+            console.log(`Found Entypo div after ${attempts} attempt(s) Attempting click...`);
+            reactSafeClick(entypoDiv);
+            console.log('Click Entypo div');
+            clearInterval(interval);
+            if (callback) setTimeout(callback, 800);
+            return;
+        }
 
-    // First Entypo div
-    const entypoDiv = document.querySelector('div[style*="Entypo"]');
-    if (entypoDiv) {
-        console.log('Found Entypo div, attempting click...');
-        reactSafeClick(entypoDiv);
-        console.log('Clicked Entypo div');
-        return entypoDiv;
-    }
+        if (attempts >= maxAttempts) {
+            console.log('No menu button found after max attempts.');
+            clearInterval(interval);
+        }
+    }, intervalMs)
 
-    console.log('No menu button found!');
-    return null;
 }
 
 setTimeout(() => {
     console.log('\n\n Debugging:', new Date().toLocaleTimeString());
-    ff_find_menu_dots();
-    ff_click_view_button();
-    ff_click_pay_and_schedule();
+
+    ff_find_menu_dots(20, 500, () => {
+        ff_click_view_button();
+        setTimeout(() => ff_click_pay_and_schedule(), 1500);
+    });
+
 }, 1500);
 
 function ff_click_view_button() {
